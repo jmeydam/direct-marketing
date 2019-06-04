@@ -1,0 +1,133 @@
+---
+title: "Direct Marketing Project"
+author: "Jens Meydam"
+date: "2019-06-05"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+source("code.R")
+```
+
+# Introduction
+
+This is the second capstone project for 
+[HarvardX: PH125.9x](https://www.edx.org/professional-certificate/harvardx-data-science) 
+on [edX](https://www.edx.org).
+
+Instructor: [Prof. Rafael Irizarry](https://www.hsph.harvard.edu/rafael-irizarry/).
+
+This project is organized along the lines of the 
+[first capstone project](https://github.com/jmeydam/movielens). 
+Whereas in the first project the data and task were given, and the analyis had 
+already been covered extensively in class, the data, task and approach for the 
+second project have to be chosen by the students.
+
+The data set chosen for this project is the 
+[bank marketing data set](http://archive.ics.uci.edu/ml/datasets/Bank+Marketing) 
+made available via the [UCI Machine Learning Repository](http://archive.ics.uci.edu/ml) 
+of the University of California, Irvine.
+
+> The data is related with direct marketing campaigns (phone calls) of a Portuguese banking institution. The classification goal is to predict if the client will subscribe [to] a term deposit (variable y).
+
+Full citation for data set: 
+
+> [Moro et al., 2014] S. Moro, P. Cortez and P. Rita. A Data-Driven Approach to Predict the Success of Bank Telemarketing. Decision Support Systems, Elsevier, 62:22-31, June 2014
+
+[Background info term deposit](https://www.investopedia.com/terms/t/termdeposit.asp):
+
+> A term deposit is a fixed-term investment that includes the deposit of money into an account at a financial institution. Term deposit investments usually carry short-term maturities ranging from one month to a few years and will have varying levels of required minimum deposits.
+> 
+> The investor must understand when buying a term deposit that they can withdraw their funds only after the term ends. In some cases, the account holder may allow the investor early termination—or withdrawal—if they give several days notification. Also, there will be a penalty assessed for early termination.
+
+
+# Data
+
+(Source: <http://archive.ics.uci.edu/ml/datasets/Bank+Marketing>)
+
+## Data set used
+
+bank-additional-full.csv with all examples (41188) and 20 inputs, ordered by date (from May 2008 to November 2010), very close to the data analyzed in [Moro et al., 2014].
+
+## Download link
+
+<http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip>
+
+## Variables
+
+### Bank client data
+
+1. age (numeric)
+2. job : type of job (categorical: "admin.","blue-collar","entrepreneur","housemaid","management","retired","self-employed","services","student","technician","unemployed","unknown")
+3. marital : marital status (categorical: "divorced","married","single","unknown"; note: "divorced" means divorced or widowed)
+4. education (categorical: "basic.4y","basic.6y","basic.9y","high.school","illiterate","professional.course","university.degree","unknown")
+5. default: has credit in default? (categorical: "no","yes","unknown")
+6. housing: has housing loan? (categorical: "no","yes","unknown")
+7. loan: has personal loan? (categorical: "no","yes","unknown")
+
+### Related with the last contact of the current campaign
+
+8. contact: contact communication type (categorical: "cellular","telephone") 
+9. month: last contact month of year (categorical: "jan", "feb", "mar", ..., "nov", "dec")
+10. day_of_week: last contact day of the week (categorical: "mon","tue","wed","thu","fri")
+11. duration: last contact duration, in seconds (numeric). Important note:  this attribute highly affects the output target (e.g., if duration=0 then y="no"). Yet, the duration is not known before a call is performed. Also, after the end of the call y is obviously known. Thus, this input should only be included for benchmark purposes and should be discarded if the intention is to have a realistic predictive model.
+
+### Other attributes
+
+12. campaign: number of contacts performed during this campaign and for this client (numeric, includes last contact)
+13. pdays: number of days that passed by after the client was last contacted from a previous campaign (numeric; 999 means client was not previously contacted)
+14. previous: number of contacts performed before this campaign and for this client (numeric)
+15. poutcome: outcome of the previous marketing campaign (categorical: "failure","nonexistent","success")
+
+### social and economic context attributes
+
+16. emp.var.rate: employment variation rate - quarterly indicator (numeric)
+17. cons.price.idx: consumer price index - monthly indicator (numeric)     
+18. cons.conf.idx: consumer confidence index - monthly indicator (numeric)     
+19. euribor3m: euribor 3 month rate - daily indicator (numeric)
+20. nr.employed: number of employees - quarterly indicator (numeric)
+
+## Output variable (target)
+
+21. y: has the client subscribed a term deposit? (binary: "yes","no")
+
+## Missing Attribute Values
+
+There are several missing values in some categorical attributes, all coded with the "unknown" label. These missing values can be treated as a possible class label or using deletion or imputation techniques. 
+
+
+# Analysis
+
+...
+
+
+# Results
+
+...
+
+## Graphics
+
+```{r, echo=FALSE}
+print("...")
+```
+
+## Parameters
+
+```{r}
+print("...")
+```
+
+## Achieved result
+
+```{r}
+print("...")
+```
+
+
+# Conclusion
+
+... 
