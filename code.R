@@ -339,3 +339,102 @@ nrow(val) / nrow(d)
 ###############################################################################
 
 str(train)
+
+### Social and Economic Context Attributes
+
+# 16. emp.var.rate: employment variation rate - quarterly indicator (numeric)
+# 17. cons.price.idx: consumer price index - monthly indicator (numeric)     
+# 18. cons.conf.idx: consumer confidence index - monthly indicator (numeric)     
+# 19. euribor3m: euribor 3 month rate - daily indicator (numeric)
+# 20. nr.employed: number of employees - quarterly indicator (numeric)
+
+# The date is not given, but, according to data set documentation,
+# the inputs are ordered by date, from May 2008 to November 2010.
+# Therefore, plotting the data in sequence will give an approximation 
+# to a proper time series.
+#
+# Note:
+#
+# * The observations are not evenly distributed in time. 
+# * The sequence of the observations as given in the original data set 
+#   is preserved in the training set.
+# * The observations cover the period from just before to two years 
+#   after the onset of the global financial crisis. The date of the 
+#   collapse of Lehman Brothers is September 15, 2008.
+#   (https://en.wikipedia.org/wiki/Financial_crisis_of_2007%E2%80%932008)
+
+# nr.employed: solid downward trend after onset of crisis
+plot(train$nr.employed)
+
+# emp.var.rate: similar to employed, but uptick towards the end 
+# (though still negative)
+plot(train$emp.var.rate)
+
+# train$emp.var.rate and train$nr.employed are strongly correlated
+plot(train$emp.var.rate, train$nr.employed)
+cor(train$emp.var.rate, train$nr.employed)
+
+# euribor3m: approximately constant before and after onset of crisis, 
+# with jump discontinuity after onset
+plot(train$euribor3m)
+
+# cons.price.idx: slow downward trend for most of the time, with 
+# strong upwards movement at the end
+plot(train$cons.price.idx)
+
+# cons.conf.idx: at first glance similar to cons.price.idx, but 
+# more variability
+plot(train$cons.conf.idx)
+
+# although there appears to be a (nonlinear) pattern, 
+# cons.conf.idx and cons.price.idx are barely correlated
+plot(train$cons.price.idx, train$cons.conf.idx)
+cor(train$cons.price.idx, train$cons.conf.idx)
+
+# both nr.employed and emp.var.rate are weakly correlated with cons.conf.idx
+plot(train$nr.employed, train$cons.conf.idx)
+cor(train$nr.employed, train$cons.conf.idx)
+plot(train$emp.var.rate, train$cons.conf.idx)
+cor(train$emp.var.rate, train$cons.conf.idx)
+
+# both nr.employed and emp.var.rate are relatively strongly correlated 
+# with cons.price.idx
+plot(train$nr.employed, train$cons.price.idx)
+cor(train$nr.employed, train$cons.price.idx)
+plot(train$emp.var.rate, train$cons.price.idx)
+cor(train$emp.var.rate, train$cons.price.idx)
+
+# at one glance
+pairs(~ nr.employed + emp.var.rate + euribor3m + cons.price.idx + cons.conf.idx, 
+      data = train, 
+      main = "Scatterplot Matrix Economic Indicators")
+
+
+#### Attributes from Bank Client Data
+
+#  1. age (numeric)
+#     log_age
+#  2. job: type of job (categorical: "admin.", "blue-collar", "entrepreneur", "housemaid", "management", "retired", "self-employed", "services", "student", "technician", "unemployed", "unknown")
+#  3. marital: marital status (categorical: "divorced", "married", "single", "unknown"; note: "divorced" means divorced or widowed)
+#  4. education (categorical: "basic.4y", "basic.6y", "basic.9y", "high.school", "illiterate", "professional.course", "university.degree", "unknown")
+#  5. default: has credit in default? (categorical: "no", "yes", "unknown")
+#  6. housing: has housing loan? (categorical: "no", "yes", "unknown")
+#  7. loan: has personal loan? (categorical: "no", "yes", "unknown")
+
+
+#### Attributes Related to the Last Contact of the Current Campaign
+
+#  8. contact: contact communication type (categorical: "cellular", "telephone") 
+#  9. month: last contact month of year (categorical: "jan", "feb", "mar", ..., "nov", "dec")
+# 10. day_of_week: last contact day of the week (categorical: "mon", "tue", "wed", "thu", "fri")
+# 11. duration: last contact duration, in seconds (numeric). Important note:  this attribute highly affects the output target (e.g., if duration=0 then y="no"). Yet, the duration is not known before a call is performed. Also, after the end of the call y is obviously known. Thus, this input should only be included for benchmark purposes and should be discarded if the intention is to have a realistic predictive model.
+
+
+#### Other Attributes
+
+# 12. campaign: number of contacts performed during this campaign and for this client (numeric, includes last contact)
+#     log_campaign
+# 13. pdays: number of days that passed by after the client was last contacted from a previous campaign (numeric; 999 means client was not previously contacted)
+#     log_pdays
+# 14. previous: number of contacts performed before this campaign and for this client (numeric)
+# 15. poutcome: outcome of the previous marketing campaign (categorical: "failure", "nonexistent", "success")
