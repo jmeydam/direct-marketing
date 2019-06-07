@@ -12,7 +12,7 @@ rm(list = ls())
 
 csv_file <- "bank-additional/bank-additional-full.csv"
 
-# uncomment to download data:
+# Uncomment to download data:
 
 # dl <- tempfile()
 # download.file("http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip", dl)
@@ -49,7 +49,7 @@ boxplot(d$age)
 hist(d$age)
 ggplot(d, aes(age)) + geom_histogram()
 
-# add feature log_age (log transform of age)
+# Add feature log_age (log transform of age) with more symmetric distribution
 d$log_age <- log(d$age)
 class(d$log_age)
 sum(is.na(d$log_age)) == 0
@@ -171,6 +171,7 @@ ggplot(day_of_week_counts, aes(reorder(day_of_week, -count), count)) +
 
 # 11. duration: last contact duration, in seconds (numeric). 
 # Important note:  this attribute highly affects the output target (e.g., if duration=0 then y="no"). Yet, the duration is not known before a call is performed. Also, after the end of the call y is obviously known. Thus, this input should only be included for benchmark purposes and should be discarded if the intention is to have a realistic predictive model.
+# (Will not use this feature, therefore no log transform)
 class(d$duration)
 sum(is.na(d$duration)) == 0
 min(d$duration)
@@ -191,7 +192,8 @@ hist(d$campaign)
 ggplot(d, aes(campaign)) + geom_histogram()
 
 min(d$campaign) == 1
-# add feature log_campaign (log transform of campaign)
+# Add feature log_campaign (log transform of campaign) to add more weight 
+# to difference between small values
 d$log_campaign = log(d$campaign)
 class(d$log_campaign)
 sum(is.na(d$log_campaign)) == 0
@@ -201,7 +203,8 @@ boxplot(d$log_campaign)
 hist(d$log_campaign)
 ggplot(d, aes(log_campaign)) + geom_histogram()
 
-# 13. pdays: number of days that passed by after the client was last contacted from a previous campaign (numeric; 999 means client was not previously contacted)
+# 13. pdays: number of days that passed by after the client was last contacted from a previous campaign 
+#            (numeric; 999 means client was not previously contacted)
 class(d$pdays)
 sum(is.na(d$pdays)) == 0
 min(d$pdays)
@@ -217,7 +220,12 @@ hist(d$pdays[d$pdays < 999])
 ggplot(d[d$pdays < 999,], aes(pdays)) + geom_histogram()
 
 min(d$pdays + 1) == 1
-# add feature log_pdays (log transform of pdays + 1)
+# Add feature log_pdays (log transform of pdays + 1) to add more weight 
+# to difference between small values and reduce distance to outlier
+# Note:
+# - Negligible number of observations with pdays = 0, and these are really 
+#   rounded down to 0, since some time - a fraction of a day - has passed
+# - 999 means client was not previously contacted
 d$log_pdays <- log(d$pdays + 1)
 class(d$log_pdays)
 sum(is.na(d$log_pdays)) == 0
@@ -307,6 +315,16 @@ ggplot(y_counts, aes(reorder(y, -count), count)) +
   xlab("y") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+# Conclusion: data ready for use in models
+# - No obviously wrong values, e.g., distribution of age as expected
+# - No NAs, missing values are encoded ("unknown")
+# - The proportion of missing values is small
+# - Fact that value is missing may carry information - for now no imputation
+
+# Three log transformations added:
+# - log_age
+# - log_campaign
+# - log_pdays
 
 ###############################################################################
 # Splitting data set into train, test and validation set  
@@ -355,12 +373,12 @@ str(train)
 #
 # Note:
 #
-# * The observations are not evenly distributed in time. 
 # * The sequence of the observations as given in the original data set 
 #   is preserved in the training set.
+# * The observations are not evenly distributed in time. 
 # * The observations cover the period from just before to two years 
-#   after the onset of the global financial crisis. The date of the 
-#   collapse of Lehman Brothers is September 15, 2008.
+#   after the onset of the global financial crisis. 
+#   Lehman Brothers collapsed on September 15, 2008.
 #   (https://en.wikipedia.org/wiki/Financial_crisis_of_2007%E2%80%932008)
 
 # nr.employed: solid downward trend after onset of crisis
@@ -386,28 +404,145 @@ plot(train$cons.price.idx)
 # more variability
 plot(train$cons.conf.idx)
 
-# although there appears to be a (nonlinear) pattern, 
+# Although there appears to be a (nonlinear) pattern, 
 # cons.conf.idx and cons.price.idx are barely correlated
 plot(train$cons.price.idx, train$cons.conf.idx)
 cor(train$cons.price.idx, train$cons.conf.idx)
 
-# both nr.employed and emp.var.rate are weakly correlated with cons.conf.idx
+# Both nr.employed and emp.var.rate are weakly correlated with cons.conf.idx
 plot(train$nr.employed, train$cons.conf.idx)
 cor(train$nr.employed, train$cons.conf.idx)
 plot(train$emp.var.rate, train$cons.conf.idx)
 cor(train$emp.var.rate, train$cons.conf.idx)
 
-# both nr.employed and emp.var.rate are relatively strongly correlated 
+# Both nr.employed and emp.var.rate are relatively strongly correlated 
 # with cons.price.idx
 plot(train$nr.employed, train$cons.price.idx)
 cor(train$nr.employed, train$cons.price.idx)
 plot(train$emp.var.rate, train$cons.price.idx)
 cor(train$emp.var.rate, train$cons.price.idx)
 
-# at one glance
+# At one glance
 pairs(~ nr.employed + emp.var.rate + euribor3m + cons.price.idx + cons.conf.idx, 
       data = train, 
       main = "Scatterplot Matrix Economic Indicators")
+
+# Median and mean of nr.employed significantly lower for y = "yes",
+# so after onset of financial crisis customers seemed to be more likely 
+# to accept the offer
+ggplot(train, aes(y, nr.employed)) + geom_boxplot() 
+train %>% group_by(y) %>% summarize(median(nr.employed))
+train %>% group_by(y) %>% summarize(mean(nr.employed))
+
+# Given correlations, similar result for emp.var.rate
+ggplot(train, aes(y, emp.var.rate)) + geom_boxplot() 
+train %>% group_by(y) %>% summarize(median(emp.var.rate))
+train %>% group_by(y) %>% summarize(mean(emp.var.rate))
+
+# Given correlations, similar result for euribor3m
+ggplot(train, aes(y, euribor3m)) + geom_boxplot() 
+train %>% group_by(y) %>% summarize(median(euribor3m))
+train %>% group_by(y) %>% summarize(mean(euribor3m))
+
+# Given correlations, similar result for cons.price.idx
+ggplot(train, aes(y, cons.price.idx)) + geom_boxplot() 
+train %>% group_by(y) %>% summarize(median(cons.price.idx))
+# However, difference between means is minimal
+train %>% group_by(y) %>% summarize(mean(cons.price.idx))
+
+# However, median and mean of cons.conf.idx slightly *higher* for y = "yes",
+# so after onset of financial crisis customers seemed to be more likely 
+# to accept the offer *in particular* when consumer confidence was improving
+ggplot(train, aes(y, cons.conf.idx)) + geom_boxplot() 
+train %>% group_by(y) %>% summarize(median(cons.conf.idx))
+train %>% group_by(y) %>% summarize(mean(cons.conf.idx))
+
+# Assessing combinations of cons.conf.idx with other indicators:
+# How well and in which way do these combinations separate y = yes vs. no?
+# Note that some indicators change quarterly, some monthly, so there are clusters,
+# which are visualized by jittering the points.
+
+ggplot(train, aes(x = nr.employed, y = cons.conf.idx, color = y)) + 
+  geom_point(position = position_jitter(width = 20, height = 2),
+             alpha = 0.6) 
+
+ggplot(train, aes(x = emp.var.rate, y = cons.conf.idx, color = y)) + 
+  geom_point(position = position_jitter(width = 0.5, height = 2),
+             alpha = 0.6) 
+
+ggplot(train, aes(x = cons.price.idx, y = cons.conf.idx, color = y)) + 
+  geom_point(position = position_jitter(width = 0.25, height = 2),
+             alpha = 0.6) 
+
+ggplot(train, aes(x = euribor3m, y = cons.conf.idx, color = y)) + 
+  geom_point(position = position_jitter(width = 0.5, height = 2),
+             alpha = 0.6) 
+
+# Will not be able to use time effect for prediction, but looking
+# at change over time may help to understand patterns.
+# Remember that observations are ordered, but not evenly distributed
+# in time. Higher variability after observation 30,000 is partly due 
+# to fewer observations per time unit (fewer / lower intensity campaigns)
+
+# 20. nr.employed: number of employees - quarterly indicator (numeric)
+train %>% mutate(observation = 1:n()) %>% 
+  ggplot(aes(x = observation, y = nr.employed, color = y)) + 
+  geom_point(position = position_jitter(width = 0, height = 20),
+             alpha = 0.4)
+
+# 16. emp.var.rate: employment variation rate - quarterly indicator (numeric)
+train %>% mutate(observation = 1:n()) %>% 
+  ggplot(aes(x = observation, y = emp.var.rate, color = y)) + 
+  geom_point(position = position_jitter(width = 0, height = 0.5),
+             alpha = 0.4)
+
+# 17. cons.price.idx: consumer price index - monthly indicator (numeric)     
+train %>% mutate(observation = 1:n()) %>% 
+  ggplot(aes(x = observation, y = cons.price.idx, color = y)) + 
+  geom_point(position = position_jitter(width = 0, height = 0.25),
+             alpha = 0.4)
+
+# 19. euribor3m: euribor 3 month rate - daily indicator (numeric)
+train %>% mutate(observation = 1:n()) %>% 
+  ggplot(aes(x = observation, y = euribor3m, color = y)) + 
+  geom_point(position = position_jitter(width = 0, height = 0.5),
+             alpha = 0.4)
+
+# 18. cons.conf.idx: consumer confidence index - monthly indicator (numeric)     
+train %>% mutate(observation = 1:n()) %>% 
+  ggplot(aes(x = observation, y = cons.conf.idx, color = y)) + 
+  geom_point(position = position_jitter(width = 0, height = 5),
+             alpha = 0.4)
+
+# Conclusion:
+#
+# With a few exceptions, campaigns after observation 30,000 were more
+# successful. These campaigns can be detected via nr.employed, since
+# the number of employees is decreasing for the second half of the 
+# observations and is significantly lower towards the end.
+#
+# There might be a causal connection between the success of campaigns 
+# and a combination of economic indicators (in particular, the number
+# of employees), but the improvement of the success rate might also 
+# simply be due to a learnig effect: the campaigns towards the end may 
+# have learned lessons from previous campaigns and this might be the 
+# primary reason that later campaigns were more successful. 
+#
+# In other words, later campaigns may have been more efficient - e.g., 
+# only customers who were most likely to accept the offer were contacted. 
+#
+# This might also explain the decrease in the number of observations per 
+# time unit. An alternative explanation for this decrease might be 
+# pressure to save after the onset of the financial crisis.
+#
+# The fact that individual campaigns (sequences of observations) were 
+# sometimes more or less successful than others immediately preceding
+# or following them means that using more variables as predictors is
+# bound to lead to overfitting: combinations of more variables are more 
+# likely to be unique for individual campaigns, so that the model will
+# simply identify previous campaigns that are known to have been 
+# successful, without learning anything useful about campaigns in general
+# that would also be valid in the future.
 
 
 #### Attributes from Bank Client Data
@@ -421,6 +556,10 @@ pairs(~ nr.employed + emp.var.rate + euribor3m + cons.price.idx + cons.conf.idx,
 #  6. housing: has housing loan? (categorical: "no", "yes", "unknown")
 #  7. loan: has personal loan? (categorical: "no", "yes", "unknown")
 
+ggplot(train, aes(reorder(job, age, median), age)) + 
+  geom_boxplot() + 
+  xlab("job") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #### Attributes Related to the Last Contact of the Current Campaign
 
