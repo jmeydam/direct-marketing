@@ -222,7 +222,7 @@ boxplot(d$pdays)
 hist(d$pdays)
 ggplot(d, aes(pdays)) + geom_histogram()
 
-# without 999 (not previously contacted)
+# Without 999 (not previously contacted)
 min(d$pdays[d$pdays < 999])
 max(d$pdays[d$pdays < 999])
 boxplot(d$pdays[d$pdays < 999])
@@ -444,14 +444,16 @@ pairs(~ nr.employed + emp.var.rate + euribor3m + cons.price.idx + cons.conf.idx,
       data = train, 
       main = "Scatterplot Matrix Economic Indicators")
 
-# Median and mean of nr.employed significantly lower for y = "yes",
-# so after onset of financial crisis customers seemed to be more likely 
-# to accept the offer
+# Median and mean of nr.employed a lower for y = "yes",
+# so it seems that after the onset of the financial crisis 
+# customers were more likely to accept the offer
 ggplot(train, aes(y, nr.employed)) + geom_boxplot() 
 train %>% group_by(y) %>% summarize(median(nr.employed))
 train %>% group_by(y) %>% summarize(mean(nr.employed))
 
-# Given correlations, similar result for emp.var.rate
+# Given correlations, similar result for emp.var.rate;
+# in fact, 75% of the "yes" responses coincide with negative
+# employment variation rate
 ggplot(train, aes(y, emp.var.rate)) + geom_boxplot() 
 train %>% group_by(y) %>% summarize(median(emp.var.rate))
 train %>% group_by(y) %>% summarize(mean(emp.var.rate))
@@ -501,6 +503,11 @@ ggplot(train, aes(x = emp.var.rate, y = cons.conf.idx, color = y)) +
   geom_point(position = position_jitter(width = 0.5, height = 2),
              alpha = 0.6) 
 
+# Increasing jitter and transparency - position is now very inaccurate
+ggplot(train, aes(x = emp.var.rate, y = cons.conf.idx, color = y)) + 
+  geom_point(position = position_jitter(width = 1, height = 12),
+             alpha = 0.15) 
+
 # cons.conf.idx with cons.price.idx
 ggplot(train, aes(x = cons.price.idx, y = cons.conf.idx, color = y)) + 
   geom_point(position = position_jitter(width = 0.25, height = 2),
@@ -537,11 +544,58 @@ train %>% mutate(observation = 1:n()) %>%
   geom_point(position = position_jitter(width = 0, height = 100),
              alpha = 0.15)
 
+# reducing jitter and transparency again, but now only showing
+# observations with y = "yes"
+train %>% mutate(observation = 1:n()) %>% 
+  filter(y == "yes") %>%
+  ggplot(aes(x = observation, y = nr.employed)) + 
+  geom_point(position = position_jitter(width = 0, height = 40),
+             alpha = 0.2,
+             color = "green")
+
+# Now only showing observations with y = "no"
+train %>% mutate(observation = 1:n()) %>% 
+  filter(y == "no") %>%
+  ggplot(aes(x = observation, y = nr.employed)) + 
+  geom_point(position = position_jitter(width = 0, height = 40),
+             alpha = 0.2,
+             color = "red")
+
 # 16. emp.var.rate: employment variation rate - quarterly indicator (numeric)
 train %>% mutate(observation = 1:n()) %>% 
   ggplot(aes(x = observation, y = emp.var.rate, color = y)) + 
   geom_point(position = position_jitter(width = 0, height = 0.5),
              alpha = 0.4)
+
+# Increasing jitter and transparency to reduce effect of overplotting
+train %>% mutate(observation = 1:n()) %>% 
+  ggplot(aes(x = observation, y = emp.var.rate, color = y)) + 
+  geom_point(position = position_jitter(width = 0, height = 1),
+             alpha = 0.2)
+
+# Increasing jitter and transparency even further - now position is 
+# very inaccurate
+train %>% mutate(observation = 1:n()) %>% 
+  ggplot(aes(x = observation, y = emp.var.rate, color = y)) + 
+  geom_point(position = position_jitter(width = 0, height = 1.5),
+             alpha = 0.15)
+
+# Reducing jitter and transparency again, but now only showing
+# observations with y = "yes"
+train %>% mutate(observation = 1:n()) %>%
+  filter(y == "yes") %>%
+  ggplot(aes(x = observation, y = emp.var.rate)) + 
+  geom_point(position = position_jitter(width = 0, height = 1),
+             alpha = 0.2,
+             color = "green")
+
+# Now only showing observations with y = "no"
+train %>% mutate(observation = 1:n()) %>%
+  filter(y == "no") %>%
+  ggplot(aes(x = observation, y = emp.var.rate)) + 
+  geom_point(position = position_jitter(width = 0, height = 1),
+             alpha = 0.2,
+             color = "red")
 
 # 17. cons.price.idx: consumer price index - monthly indicator (numeric)     
 train %>% mutate(observation = 1:n()) %>% 
@@ -561,49 +615,78 @@ train %>% mutate(observation = 1:n()) %>%
   geom_point(position = position_jitter(width = 0, height = 5),
              alpha = 0.4)
 
-# !!!!!!!!!!!!!!!!
-# TODO: 
-# careful examination of of the number of "yes" and "no" responses over time
-# and also the ratio
-# !!!!!!!!!!!!!!!!
+# These two plots seem to be most revealing:
 
-train[train$y == "yes",] %>% mutate(observation = 1:n()) %>% 
+# 20. nr.employed: number of employees - quarterly indicator (numeric)
+# Reducing jitter and transparency again, but now only showing
+# observations with y = "yes"
+train %>% mutate(observation = 1:n()) %>% 
+  filter(y == "yes") %>%
   ggplot(aes(x = observation, y = nr.employed)) + 
-  geom_point(position = position_jitter(width = 0, height = 20),
-             alpha = 0.4,
-             color = "lightgreen")
+  geom_point(position = position_jitter(width = 0, height = 40),
+             alpha = 0.2,
+             color = "green")
 
+# 16. emp.var.rate: employment variation rate - quarterly indicator (numeric)
+# Reducing jitter and transparency again, but now only showing
+# observations with y = "yes"
+train %>% mutate(observation = 1:n()) %>%
+  filter(y == "yes") %>%
+  ggplot(aes(x = observation, y = emp.var.rate)) + 
+  geom_point(position = position_jitter(width = 0, height = 1),
+             alpha = 0.2,
+             color = "green")
 
-# Conclusions so far:
+# Two additional plots:
+
+# Plot density curves of "yes" and "no" responses
+train %>% mutate(observation = 1:n()) %>%
+  ggplot(aes(x = observation, color = y)) + 
+  geom_line(stat = "density")
+
+# Bin observations in groups of 2,500, then plot "yes", "no"
+train %>% mutate(observation = 1:n()) %>%
+  mutate(group = (observation %/% 2500) * 2500) %>%
+  group_by(group) %>%
+  ggplot(aes(x = group, fill = y)) + 
+  geom_bar(position = position_stack())
+
+# In the first visual displays of the data, until about observation 30,000 
+# the "no" responses drowned out the "yes" responses  - even using high 
+# levels of jitter and transparency left some uncertainty concerning
+# the changing frequency of "yes" responses. After observation 30,000 
+# the "no" responses drop dramatically, making the "yes" responses clearly
+# visible even in the first plots.
 #
-# At a first glance it appears that there were fewer "yes" responses 
-# until observation 30000. However, careful examination of the number 
-# of "yes" responses suggests that there were similar levels of "yes" 
-# responses throughout. The number of "yes" responses did not increase 
-# that much, if at all. It is more that until about observation 30000, 
-# the "no" responses drowned out the "yes" responses in the visual 
-# display of the data - even using high levels of jitter and transparency. 
-# After observation 30000 the "no" responses dropped dramatically, 
-# increasing the visibility of "yes" responses.
-#
-# What can be said is that with a few exceptions, campaigns after 
-# observation 30,000 were more efficient, with efficiency measured 
-# in terms of the ratio of "yes" to "no" responses, and in that sense 
-# more successful.
+# Further analysis confirmed that "yes" responses, while present from the 
+# beginning, became much more frequent starting around observation 22'500,
+# and ended up being more frequent than "no" responses.
 # 
-# This group of efficient campaigns can be detected via nr.employed, 
-# since the number of employees is decreasing for the second half of 
-# the observations and is significantly lower towards the end.
-#
+# If we measure the efficiency of the campaigns in terms of the ratio of 
+# "yes" to "no" responses, campaigns became daramatically more efficient
+# - and in that sense more successful - starting around observation 22'500
+# 
+# The most efficient campaigns towards the end can also be identified via
+# nr.employed, since the number of employees is decreasing for the second 
+# half of the observations and is significantly lower towards the end.
+# The employment variation rate (emp.var.rate) can also be used to detect 
+# observations from 22'500 onwards.
+# 
 # There might be a causal connection between the efficiency / success 
 # of campaigns and a combination of economic indicators (in particular, 
-# the number of employees), but the improvement of the success rate might 
-# also be due to a learning effect: the campaigns towards the end 
-# may have learned lessons from previous campaigns and this might be the 
-# primary reason that later campaigns were more efficient / successful.
+# the number of employees and the employment variation rate), but the 
+# improvement of the success rate might also be due to a learning effect: 
+# the campaigns towards the end may have learned lessons from previous 
+# campaigns and this might be the primary reason that later campaigns were 
+# more efficient / successful.
 #
-# In the following sections, observations before and after row 30,000
-# will be visualized separately and compared.
+# It is worth noting that after an initial dramatic improvement around
+# observation 22'500 performance first went back to the previous level,
+# then returned to the improved level, and then improved even further.
+# It is conceivable that this discontinuity and further accelerated 
+# improvement is a result of different campaigns using different 
+# approaches, with systematic optimization of the approaches after 
+# a first breakthrough around observation 22'500.
 
 
 #### Attributes from Bank Client Data
@@ -616,6 +699,8 @@ train[train$y == "yes",] %>% mutate(observation = 1:n()) %>%
 #  5. default: has credit in default? (categorical: "no", "yes", "unknown")
 #  6. housing: has housing loan? (categorical: "no", "yes", "unknown")
 #  7. loan: has personal loan? (categorical: "no", "yes", "unknown")
+
+#  1. age (numeric)
 
 ggplot(train, aes(reorder(job, age, median), age)) + 
   geom_boxplot() + 
@@ -633,10 +718,10 @@ ggplot(train, aes(age)) + geom_histogram() +
 ggplot(train, aes(age)) + geom_histogram() +
   ylab("") + facet_wrap(~education, ncol = 1)
 
-ggplot(train[1:30000,], aes(x = age, fill = y)) +
+ggplot(train[1:22500,], aes(x = age, fill = y)) +
   geom_histogram()
 
-ggplot(train[30001:nrow(train),], aes(x = age, fill = y)) +
+ggplot(train[22501:nrow(train),], aes(x = age, fill = y)) +
   geom_histogram()
 
 #  2. job: type of job (categorical: "admin.", "blue-collar", "entrepreneur", "housemaid", "management", "retired", "self-employed", "services", "student", "technician", "unemployed", "unknown")
@@ -649,7 +734,7 @@ train %>%
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-train[1:30000,] %>%
+train[1:22500,] %>%
   group_by(job) %>% 
   mutate(count = n()) %>%
   ggplot(aes(x = reorder(job, -count), fill = y)) + 
@@ -658,7 +743,7 @@ train[1:30000,] %>%
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-train[30001:nrow(train),] %>%
+train[22501:nrow(train),] %>%
   group_by(job) %>% 
   mutate(count = n()) %>%
   ggplot(aes(x = reorder(job, -count), fill = y)) + 
@@ -668,7 +753,7 @@ train[30001:nrow(train),] %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   group_by(job) %>% 
   mutate(count = n()) %>%
@@ -681,7 +766,7 @@ train %>%
 
 #  4. education (categorical: "basic.4y", "basic.6y", "basic.9y", "high.school", "illiterate", "professional.course", "university.degree", "unknown")
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   group_by(education) %>% 
   mutate(count = n()) %>%
@@ -694,7 +779,7 @@ train %>%
 
 #  1. age (numeric)
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   ggplot(aes(x = age, fill = y)) + 
   geom_histogram() + 
@@ -703,9 +788,9 @@ train %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   facet_wrap(~time, ncol = 1)
 
-#     log_age
+# log_age
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   ggplot(aes(x = log_age, fill = y)) + 
   geom_histogram() + 
@@ -716,7 +801,7 @@ train %>%
 
 #  3. marital: marital status (categorical: "divorced", "married", "single", "unknown"; note: "divorced" means divorced or widowed)
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   group_by(marital) %>% 
   mutate(count = n()) %>%
@@ -729,7 +814,7 @@ train %>%
 
 #  5. default: has credit in default? (categorical: "no", "yes", "unknown")
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   group_by(default) %>% 
   mutate(count = n()) %>%
@@ -742,7 +827,7 @@ train %>%
 
 #  6. housing: has housing loan? (categorical: "no", "yes", "unknown")
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   group_by(housing) %>% 
   mutate(count = n()) %>%
@@ -755,7 +840,7 @@ train %>%
 
 #  7. loan: has personal loan? (categorical: "no", "yes", "unknown")
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   group_by(loan) %>% 
   mutate(count = n()) %>%
@@ -776,7 +861,7 @@ train %>%
 
 #  8. contact: contact communication type (categorical: "cellular", "telephone") 
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   group_by(contact) %>% 
   mutate(count = n()) %>%
@@ -789,7 +874,7 @@ train %>%
 
 #  9. month: last contact month of year (categorical: "jan", "feb", "mar", ..., "nov", "dec")
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   group_by(month) %>% 
   mutate(count = n()) %>%
@@ -802,7 +887,7 @@ train %>%
 
 # 10. day_of_week: last contact day of the week (categorical: "mon", "tue", "wed", "thu", "fri")
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   group_by(day_of_week) %>% 
   mutate(count = n()) %>%
@@ -825,7 +910,7 @@ train %>%
 
 # 12. campaign: number of contacts performed during this campaign and for this client (numeric, includes last contact)
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   ggplot(aes(x = campaign, fill = y)) + 
   geom_histogram() + 
@@ -834,9 +919,9 @@ train %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   facet_wrap(~time, ncol = 1)
 
-#     log_campaign
+# log_campaign
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   ggplot(aes(x = log_campaign, fill = y)) + 
   geom_histogram() + 
@@ -847,7 +932,7 @@ train %>%
 
 # 13. pdays: number of days that passed by after the client was last contacted from a previous campaign (numeric; 999 means client was not previously contacted)
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   ggplot(aes(x = pdays, fill = y)) + 
   geom_histogram() + 
@@ -856,9 +941,9 @@ train %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   facet_wrap(~time, ncol = 1)
 
-#     log_pdays
+# log_pdays
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   ggplot(aes(x = log_pdays, fill = y)) + 
   geom_histogram() + 
@@ -869,7 +954,7 @@ train %>%
 
 # 14. previous: number of contacts performed before this campaign and for this client (numeric)
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   ggplot(aes(x = previous, fill = y)) + 
   geom_histogram() + 
@@ -880,7 +965,7 @@ train %>%
 
 # 15. poutcome: outcome of the previous marketing campaign (categorical: "failure", "nonexistent", "success")
 train %>%
-  mutate(time = ifelse(row_number() <= 30000, "before", "after")) %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   group_by(poutcome) %>% 
   mutate(count = n()) %>%
