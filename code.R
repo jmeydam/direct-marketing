@@ -341,7 +341,7 @@ ggplot(y_counts, aes(reorder(y, -count), count)) +
 # - log_pdays
 
 ###############################################################################
-# Splitting data set into train, test and validation set  
+# Splitting data set into training, test and validation set  
 ###############################################################################
 
 set.seed(9)
@@ -975,3 +975,452 @@ train %>%
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   facet_wrap(~time, ncol = 1)
+
+
+###############################################################################
+# Splitting training set further into training set "before" and "after" and 
+# test set "before" and "after", using observation 22,500 as cut-off
+###############################################################################
+
+# index of observations in orginal training set that come before and after 
+# observation 22,500
+index_before <- 1:22500
+index_after <- 22501:nrow(train)
+length(index_before)
+length(index_after)
+length(index_before) + length(index_after) == nrow(train)
+
+# Splitting orginal training set into "before" and "after" set
+train_test_before <- train[index_before,]
+train_test_after <- train[index_after,]
+
+# new training and test set "before"
+# test set to be used for model selection, 10% of remaining data
+test_index_before <- createDataPartition(y = train_test_before$y, 
+                                         times = 1, p = 0.1, 
+                                         list = FALSE)
+train_before <- train_test_before[-test_index_before,]
+test_before <- train_test_before[test_index_before,]
+rm(train_test_before)
+
+nrow(test_before) / (nrow(test_before) + nrow(train_before))
+
+# new training and test set "after"
+# test set to be used for model selection, 10% of remaining data
+test_index_after <- createDataPartition(y = train_test_after$y, 
+                                        times = 1, p = 0.1, 
+                                        list = FALSE)
+train_after <- train_test_after[-test_index_after,]
+test_after <- train_test_after[test_index_after,]
+rm(train_test_after)
+
+nrow(test_after) / (nrow(test_after) + nrow(train_after))
+
+nrow(train) == nrow(train_before) + nrow(test_before) + 
+               nrow(train_after) + nrow(test_after)
+
+
+###############################################################################
+# Using simple boosting model (with default value for parameter lambda) to 
+# assess the relative importance of features for prediction, before and after
+# the cut-off
+###############################################################################
+
+library(gbm)
+# browseVignettes(package = "gbm")
+
+# Bernoulli requires the response to be in {0,1}
+table(unclass(train_before$y))
+train_before$y <- unclass(train_before$y) - 1
+table(train_before$y)
+
+# also:
+test_before$y <- unclass(test_before$y) - 1
+train_after$y <- unclass(train_after$y) - 1
+test_after$y <- unclass(test_after$y) - 1
+
+set.seed(5)
+
+###############################################################################
+
+# "before" model, "before" data
+
+colnames(train_before)
+
+# Using all attributes except duration
+# boost_before_1 <- gbm(y ~ ., 
+#                       # remove duration (see comment above)
+#                       data = subset(train_before, 
+#                                     select = -c(duration)),
+#                       distribution = "bernoulli", 
+#                       n.trees = 5000, 
+#                       interaction.depth = 4)
+# 
+# summary(boost_before_1)
+#                           var     rel.inf
+# job                       job 21.99344221
+# age                       age 14.66768211
+# education           education 12.66994890
+# euribor3m           euribor3m 12.07269046
+# month                   month 11.95917650
+# day_of_week       day_of_week  9.69242929
+# campaign             campaign  5.43326406
+# marital               marital  3.44696878
+# housing               housing  2.48131874
+# loan                     loan  1.73821717
+# default               default  1.13750990
+# [...]
+
+# For boosting model, log transformation hardly makes a difference
+# boost_before_2 <- gbm(y ~ ., 
+#                       # remove duration (see comment above)
+#                       # for model to use log transformations, remove old columns
+#                       data = subset(train_before, 
+#                                    select = -c(duration, age, campaign, pdays)),
+#                      distribution = "bernoulli", 
+#                      n.trees = 5000, 
+#                      interaction.depth = 4)
+# 
+# summary(boost_before_2)
+#                           var     rel.inf
+# job                       job 21.50759027
+# log_age               log_age 14.11613082
+# education           education 13.00248265
+# month                   month 12.57403848
+# euribor3m           euribor3m 12.18433435
+# day_of_week       day_of_week  9.48192197
+# log_campaign     log_campaign  5.08813988
+# marital               marital  3.73122794
+# housing               housing  2.39563281
+# loan                     loan  1.77347544
+# contact               contact  1.10944289
+# default               default  1.05002187
+
+# Note that euribor3m was picked among the economic variables.
+# Now leaving out all economic variables and month to reduce 
+# effect of beginning financial crisis on model. 
+# Also leaving out log transformations and, as before, duration.
+boost_before_3 <- gbm(y ~ ., 
+                      data = subset(train_before, 
+                                    select = -c(duration, month, euribor3m, emp.var.rate, 
+                                                cons.price.idx, cons.conf.idx, nr.employed,
+                                                log_age, log_campaign, log_pdays)),
+                      distribution = "bernoulli", 
+                      n.trees = 5000, 
+                      interaction.depth = 4)
+
+summary(boost_before_3)
+#                     var     rel.inf
+# job                 job 25.98350859
+# age                 age 20.22413538
+# education     education 16.68852573
+# day_of_week day_of_week 13.52817396
+# campaign       campaign  7.69092874
+# marital         marital  4.88393563
+# housing         housing  3.16004580
+# contact         contact  3.06779741
+# loan               loan  2.29501734
+# default         default  1.79893328
+# poutcome       poutcome  0.42801736
+# previous       previous  0.17814268
+# pdays             pdays  0.07283811
+
+plot(boost_before_3, i = "job")
+
+train %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
+  mutate(time = factor(time, levels = c("before", "after"))) %>%
+  group_by(job) %>% 
+  mutate(count = n()) %>%
+  ggplot(aes(x = reorder(job, -count), fill = y)) + 
+  geom_bar() + 
+  xlab("job") + 
+  ylab("") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~time, ncol = 1)
+
+plot(boost_before_3, i = "age")
+
+train %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
+  mutate(time = factor(time, levels = c("before", "after"))) %>%
+  ggplot(aes(x = age, fill = y)) + 
+  geom_histogram() + 
+  xlab("age") + 
+  ylab("") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~time, ncol = 1)
+
+plot(boost_before_3, i = "education")
+
+train %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
+  mutate(time = factor(time, levels = c("before", "after"))) %>%
+  group_by(education) %>% 
+  mutate(count = n()) %>%
+  ggplot(aes(x = reorder(education, -count), fill = y)) + 
+  geom_bar() + 
+  xlab("education") + 
+  ylab("") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~time, ncol = 1)
+
+plot(boost_before_3, i = "day_of_week")
+plot(boost_before_3, i = "campaign")
+plot(boost_before_3, i = "marital")
+plot(boost_before_3, i = "housing")
+plot(boost_before_3, i = "contact")
+plot(boost_before_3, i = "loan")
+
+# test_before
+
+# ?predict.gbm
+yhat_boost_before <- predict(boost_before_3,
+                             type = "response",
+                             newdata = test_before,
+                             n.trees = 5000)
+
+summary(test_before$y == 1)
+summary(yhat_boost_before)
+# using cut-off for probability to get similar number of predictions for "yes"
+summary(yhat_boost_before > 0.15)
+table(test_before$y == 1, yhat_boost_before > 0.15)
+actual_before <- ifelse(test_before$y == 1, "yes", "no")
+predicted_before <- ifelse(yhat_boost_before > 0.15, "yes", "no")
+mean(actual_before == predicted_before)
+table(actual_before, predicted_before)
+# TODO: ROC curve, AUC
+
+###############################################################################
+
+# "after" model, "after" data
+
+boost_after_3 <- gbm(y ~ ., 
+                     data = subset(train_after, 
+                                   select = -c(duration, month, euribor3m, emp.var.rate, 
+                                               cons.price.idx, cons.conf.idx, nr.employed,
+                                               log_age, log_campaign, log_pdays)),
+                     distribution = "bernoulli", 
+                     n.trees = 5000, 
+                     interaction.depth = 4)
+
+summary(boost_after_3)
+#                     var     rel.inf
+# job                 job 25.2312046
+# age                 age 21.6614722
+# education     education 13.9176535
+# day_of_week day_of_week 11.8006619
+# pdays             pdays  7.8908713
+# campaign       campaign  4.7416141
+# poutcome       poutcome  3.1620584
+# marital         marital  3.1499624
+# housing         housing  2.5996985
+# previous       previous  2.2907428
+# loan               loan  1.8869125
+# contact         contact  0.9199074
+# default         default  0.7472403
+
+plot(boost_after_3, i = "job")
+
+train %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
+  mutate(time = factor(time, levels = c("before", "after"))) %>%
+  group_by(job) %>% 
+  mutate(count = n()) %>%
+  ggplot(aes(x = reorder(job, -count), fill = y)) + 
+  geom_bar() + 
+  xlab("job") + 
+  ylab("") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~time, ncol = 1)
+
+plot(boost_after_3, i = "age")
+
+train %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
+  mutate(time = factor(time, levels = c("before", "after"))) %>%
+  ggplot(aes(x = age, fill = y)) + 
+  geom_histogram() + 
+  xlab("age") + 
+  ylab("") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~time, ncol = 1)
+
+plot(boost_after_3, i = "education")
+
+train %>%
+  mutate(time = ifelse(row_number() <= 22500, "before", "after")) %>%
+  mutate(time = factor(time, levels = c("before", "after"))) %>%
+  group_by(education) %>% 
+  mutate(count = n()) %>%
+  ggplot(aes(x = reorder(education, -count), fill = y)) + 
+  geom_bar() + 
+  xlab("education") + 
+  ylab("") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~time, ncol = 1)
+
+plot(boost_after_3, i = "day_of_week")
+plot(boost_after_3, i = "campaign")
+plot(boost_after_3, i = "marital")
+plot(boost_after_3, i = "housing")
+plot(boost_after_3, i = "contact")
+plot(boost_after_3, i = "loan")
+
+# test_after
+
+# ?predict.gbm
+yhat_boost_after <- predict(boost_after_3,
+                            type = "response",
+                            newdata = test_after,
+                            n.trees = 5000)
+
+summary(test_after$y == 1)
+summary(yhat_boost_after)
+# using cut-off for probability to get similar number of predictions for "yes"
+summary(yhat_boost_after > 0.35)
+table(test_after$y == 1, yhat_boost_after > 0.35)
+actual_after <- ifelse(test_after$y == 1, "yes", "no")
+predicted_after <- ifelse(yhat_boost_after > 0.35, "yes", "no")
+mean(actual_after == predicted_after)
+table(actual_after, predicted_after)
+# TODO: ROC curve, AUC
+
+###############################################################################
+
+# "before" model, "after" data
+
+yhat_boost_model_before_data_after <- predict(boost_before_3,
+                                      type = "response",
+                                      newdata = test_after,
+                                      n.trees = 5000)
+
+summary(test_after$y == 1)
+summary(yhat_boost_model_before_data_after)
+# using cut-off for probability to get similar number of predictions for "yes"
+summary(yhat_boost_model_before_data_after > 0.15)
+table(test_after$y == 1, yhat_boost_model_before_data_after > 0.15)
+actual_after <- ifelse(test_after$y == 1, "yes", "no")
+predicted_model_before_data_after <- ifelse(yhat_boost_model_before_data_after > 0.15, "yes", "no")
+mean(actual_after == predicted_model_before_data_after)
+table(actual_after, predicted_model_before_data_after)
+# TODO: ROC curve, AUC
+
+###############################################################################
+# For comparison: fitting logistic regression models using features known to 
+# be important, using whole training set with different combinations of features
+###############################################################################
+
+glm_1 <- glm(y ~ job, 
+             data = train,
+             family = "binomial")
+
+summary(glm_1)
+
+glm_2 <- glm(y ~ age, 
+             data = train,
+             family = "binomial")
+
+summary(glm_2)
+
+glm_3 <- glm(y ~ education, 
+             data = train,
+             family = "binomial")
+
+summary(glm_3)
+
+glm_4 <- glm(y ~ job + age + education, 
+             data = train,
+             family = "binomial")
+
+summary(glm_4)
+
+glm_5 <- glm(y ~ day_of_week + pdays + campaign, 
+             data = train,
+             family = "binomial")
+
+summary(glm_5)
+
+glm_6 <- glm(y ~ job + age + education + day_of_week + pdays + campaign, 
+             data = train,
+             family = "binomial")
+
+summary(glm_6)
+
+# ?predict.glm
+yhat_glm <- predict(glm_6, newdata = test, type = "response")
+
+summary(test$y == "yes")
+summary(yhat_glm)
+# using cut-off for probability to get similar number of predictions for "yes"
+summary(yhat_glm > 0.15)
+table(test$y == "yes", yhat_glm > 0.15)
+actual_test <- test$y
+predicted_test <- ifelse(yhat_glm > 0.15, "yes", "no")
+mean(actual_test == predicted_test)
+table(actual_test, predicted_test)
+# TODO: ROC curve, AUC
+
+###############################################################################
+# Fitting boosting model from before, using whole training set
+###############################################################################
+
+# Bernoulli requires the response to be in {0,1}
+table(unclass(train$y))
+train$y <- unclass(train$y) - 1
+table(unclass(train$y))
+
+# also:
+test$y <- unclass(test$y) - 1
+
+boost_3 <- gbm(y ~ ., 
+               data = subset(train, 
+                             select = -c(duration, month, euribor3m, emp.var.rate, 
+                                         cons.price.idx, cons.conf.idx, nr.employed,
+                                         log_age, log_campaign, log_pdays)),
+               distribution = "bernoulli", 
+               n.trees = 5000, 
+               interaction.depth = 4)
+
+summary(boost_3)
+
+yhat_boost <- predict(boost_3,
+                      type = "response",
+                      newdata = test,
+                      n.trees = 5000)
+
+summary(test$y == 1)
+summary(yhat_boost)
+# using cut-off for probability to get similar number of predictions for "yes"
+summary(yhat_boost > 0.20)
+table(test$y == 1, yhat_boost > 0.20)
+actual <- ifelse(test$y == 1, "yes", "no")
+predicted <- ifelse(yhat_boost > 0.20, "yes", "no")
+mean(actual == predicted)
+table(actual, predicted)
+# TODO: ROC curve, AUC
+
+###############################################################################
+# Evaluating boosting model from before, using validation set
+###############################################################################
+
+# Bernoulli requires the response to be in {0,1}
+val$y <- unclass(val$y) - 1
+
+yhat_boost_val <- predict(boost_3,
+                          type = "response",
+                          newdata = val,
+                          n.trees = 5000)
+
+summary(val$y == 1)
+summary(yhat_boost_val)
+# using cut-off for probability to get similar number of predictions for "yes"
+summary(yhat_boost_val > 0.20)
+table(val$y == 1, yhat_boost_val > 0.20)
+actual_val <- ifelse(val$y == 1, "yes", "no")
+predicted_val <- ifelse(yhat_boost_val > 0.20, "yes", "no")
+mean(actual_val == predicted_val)
+table(actual_val, predicted_val)
+# TODO: ROC curve, AUC
+
+###############################################################################
