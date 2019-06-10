@@ -1,7 +1,7 @@
 ---
-title: "Direct Marketing Project"
+title: "Finding Opportunity in Crisis"
 author: "Jens Meydam"
-date: "2019-06-05"
+date: "2019-06-10"
 output: pdf_document
 ---
 
@@ -10,21 +10,98 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r, include=FALSE}
-source("code.R")
+library(tidyverse)
+library(caret)
+library(gbm)
+library(ROCR)
+
+rm(list = ls())
+
+# https://stackoverflow.com/questions/8197559/emulate-ggplot2-default-color-palette
+RED = "#F8766D"
+GREEN = "#00BFC4"
+
+csv_file <- "bank-additional/bank-additional-full.csv"
+
+# Uncomment to download data:
+
+# dl <- tempfile()
+# download.file("http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip", dl)
+# unzip(dl, csv_file)
+
+d <- read.table(csv_file, header = TRUE, sep = ";", stringsAsFactors = TRUE)
+
+
+# Add y_bernoulli for GBM, otherwise error message:
+# Bernoulli requires the response to be in {0,1}
+d$y_bernoulli <- unclass(d$y) - 1
+
 ```
+
+# Preliminary Remark
+
+This project is an exercise. The data set has been studied many times before,
+but at the time of this writing the author has not the slightest idea what 
+conclusions have been reached by others. Consequently, this study may turn 
+out to offer a fresh perspective, but it is more likely that it will 
+merely rediscover what has already been described more clearly elsewhere.
+
+# Executive Summary
+
+observations are ordered by date, from May 2008 to November 2010.
+- The observations cover the period from just before to two years 
+  after the onset of the global financial crisis. 
+  Lehman Brothers collapsed on September 15, 2008.
+  (https://en.wikipedia.org/wiki/Financial_crisis_of_2007%E2%80%932008)
+
+"yes" responses, while present from the
+beginning, became much more frequent starting around observation 27'500,
+and ended up being more frequent than "no" responses.
+
+If we measure the efficiency of the campaigns in terms of the ratio of
+"yes" to "no" responses, campaigns became daramatically more efficient
+- and in that sense more successful - starting around observation 27'500.
+
+There might be a causal connection between the efficiency/success
+of campaigns and a combination of economic indicators (in particular,
+the number of employees and the employment variation rate), but the
+improvement of the success rate might also be due to a learning effect:
+the campaigns towards the end may have learned lessons from previous
+campaigns and this might be an important reason why later campaigns
+were more efficient/successful.
+
+Could the improvement of campaign performance have com earlier, before
+the onset of the financial crisis?
+
+A commonly highly effective machine learning algorithm has been trained
+and tested both on the data before the onset of the financial crisis and 
+on the data after. The model trained on the earlier data has nor predictive 
+power, which suggests that the data contains no useful signal. The model 
+trained on the later data, however, has considerable predictive power and could 
+have been used for optimizing campaigns. Indeed, later campaigns
+appear to have been informed by such a model, systematically targeting 
+subgroups and calibrating the number of calls.
+
+To conclude, it appears that the improvement of campaign performance
+was a result of a new, optimized approach that exploited changing attitudes
+in a country in crisis. In particular, it is conceivable that certain
+identifiable subgroups among the customers may have become more susceptible
+to sales pitches emphasizing security and wealth protection.
+
 
 # Introduction
 
-The data set chosen for this project is the 
+## Data Set
+
 [bank marketing data set](http://archive.ics.uci.edu/ml/datasets/Bank+Marketing) 
 made available via the [UCI Machine Learning Repository](http://archive.ics.uci.edu/ml) 
-maintained by the University of California, Irvine. As stated on the website:
+maintained by the University of California, Irvine. 
+
+(Further details below.)
+
+As stated on the website:
 
 > The data is related with direct marketing campaigns (phone calls) of a Portuguese banking institution. The classification goal is to predict if the client will subscribe [to] a term deposit (variable y).
-
-Full citation for data set: 
-
-> [Moro et al., 2014] S. Moro, P. Cortez and P. Rita. A Data-Driven Approach to Predict the Success of Bank Telemarketing. Decision Support Systems, Elsevier, 62:22-31, June 2014
 
 [Background info term deposit](https://www.investopedia.com/terms/t/termdeposit.asp):
 
@@ -32,10 +109,30 @@ Full citation for data set:
 > 
 > The investor must understand when buying a term deposit that they can withdraw their funds only after the term ends. In some cases, the account holder may allow the investor early termination—or withdrawal—if they give several days notification. Also, there will be a penalty assessed for early termination.
 
+## Goal
+
+Goal of this project.
+
+## Method
+
+Mostly EDA.
+
+Towards the end: Boosting (GBM).
+
 
 # Data
 
-(Source: <http://archive.ics.uci.edu/ml/datasets/Bank+Marketing>)
+[bank marketing data set](http://archive.ics.uci.edu/ml/datasets/Bank+Marketing) 
+made available via the [UCI Machine Learning Repository](http://archive.ics.uci.edu/ml) 
+maintained by the University of California, Irvine. 
+
+Full citation for data set: 
+
+> [Moro et al., 2014] S. Moro, P. Cortez and P. Rita. A Data-Driven Approach to Predict the Success of Bank Telemarketing. Decision Support Systems, Elsevier, 62:22-31, June 2014
+
+## Further Information About the Data
+
+> <http://archive.ics.uci.edu/ml/datasets/Bank+Marketing>
 
 ## Data Set Used
 
@@ -43,7 +140,7 @@ bank-additional-full.csv with all examples (41188) and 20 inputs, ordered by dat
 
 ## Download Link
 
-<http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip>
+> <http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip>
 
 ## Variables
 
@@ -83,39 +180,399 @@ bank-additional-full.csv with all examples (41188) and 20 inputs, ordered by dat
 
 21. y: has the client subscribed a term deposit? (binary: "yes", "no")
 
-### Missing Attribute Values
+Added for GBM: y_bernoulli (0 = "no", 1 = "yes")
 
-There are several missing values in some categorical attributes, all coded with the "unknown" label. These missing values can be treated as a possible class label or using deletion or imputation techniques. 
+## Result of Preliminary Exploration of Data
+
+Conclusion: data ready for use in models
+
+- No obviously wrong values, e.g., distribution of age as expected
+- No NAs; missing values are encoded ("unknown")
+- The proportion of missing values is small
+
+## Added Variable y_bernoulli
+
+Added for GBM: y_bernoulli (0 = "no", 1 = "yes")
 
 
-# Analysis
+# Exploratory Data Analysis
 
-...
+## Social and Economic Context Attributes
 
+Most of these variables are correlated.
 
-# Results
+We show one example:
 
-...
+nr.employed: number of employees - quarterly indicator (numeric)
 
-## Graphics
+Looking at change over time may help to understand patterns.
+
+The date is not given, but, according to data set documentation,
+the observations are ordered by date, from May 2008 to November 2010.
+Therefore, plotting the data in sequence will give an approximation 
+to a proper time series.
+
+Note:
+
+- The observations cover the period from just before to two years 
+  after the onset of the global financial crisis. 
+  Lehman Brothers collapsed on September 15, 2008.
+  (https://en.wikipedia.org/wiki/Financial_crisis_of_2007%E2%80%932008)
+- The observations are not evenly distributed in time. 
+- Higher variability after observation 36,000 is partly due 
+  to fewer observations per time unit (fewer/lower intensity campaigns)
+
+nr.employed: number of employees
+solid downward trend after onset of crisis
 
 ```{r, echo=FALSE}
-print("...")
+d %>% mutate(observation = 1:n()) %>%
+  ggplot(aes(observation, nr.employed)) + geom_line()
 ```
 
-## Parameters
+nr.employed with response "yes" / "no"
+Jittering the points to make changing frequencies more obvious.
+
+```{r, echo=FALSE}
+d %>% mutate(observation = 1:n()) %>% 
+  ggplot(aes(x = observation, y = nr.employed, color = y)) + 
+  geom_point(position = position_jitter(width = 0, height = 20),
+             alpha = 0.4)
+```
+
+
+Plot density curves of "yes" and "no" responses
+
+```{r, echo=FALSE}
+d %>% mutate(observation = 1:n()) %>%
+  ggplot(aes(x = observation, color = y)) + 
+  geom_line(stat = "density")
+```
+
+Bin observations in groups of 2,500, then plot "yes", "no"
+
+```{r, echo=FALSE}
+d %>% mutate(observation = 1:n()) %>%
+  mutate(group = (observation %/% 2500) * 2500) %>%
+  group_by(group) %>%
+  ggplot(aes(x = group, fill = y)) + 
+  geom_bar(position = position_stack())
+```
+
+In the first visual displays of the data, until about observation 36,000,
+the "no" responses drowned out the "yes" responses  - even using high
+levels of jitter and transparency left some uncertainty concerning
+the changing frequency of "yes" responses. After observation 36,000
+the "no" responses drop dramatically, making the "yes" responses clearly
+visible even in the first plots.
+
+Further analysis confirmed that "yes" responses, while present from the
+beginning, became much more frequent starting around observation 27'500,
+and ended up being more frequent than "no" responses.
+
+If we measure the efficiency of the campaigns in terms of the ratio of
+"yes" to "no" responses, campaigns became daramatically more efficient
+- and in that sense more successful - starting around observation 27'500.
+
+The most efficient campaigns towards the end can also be identified via
+nr.employed, since the number of employees is decreasing for the second
+half of the observations and is significantly lower towards the end.
+The employment variation rate (emp.var.rate) can also be used to detect
+observations from 27'500 onwards.
+
+There might be a causal connection between the efficiency / success
+of campaigns and a combination of economic indicators (in particular,
+the number of employees and the employment variation rate), but the
+improvement of the success rate might also be due to a learning effect:
+the campaigns towards the end may have learned lessons from previous
+campaigns and this might be an important reason why later campaigns
+were more efficient/successful.
+
+It is worth noting that after an initial dramatic improvement around
+observation 27'500 performance first went back to the previous level,
+then returned to the improved level, and then improved even further.
+It is conceivable that this discontinuity and further accelerated
+improvement is a result of different campaigns using different
+approaches, with systematic optimization of the approach after a
+brief delay after a first breakthrough around observation 27'500.
+This new, optimized approach might have exploited changing attitudes
+in a country in crisis. In particular, it is conceivable that certain
+identifiable subgroups among the customers may have become more susceptible
+to sales pitches emphasizing security and wealth protection.
+
+
+## Other Attributes
+
+As we will see later, three attributes are particularly relevant:
+
+1. Job
+2. Age
+3. Education
+
+Here we will focus on these three attributes, contrasting the frequencies
+of the various values "before" and "after", while also showing the response y.
+
+### Job
+
+```{r, echo=FALSE}
+d %>%
+  mutate(time = ifelse(row_number() <= 27500, "before", "after")) %>%
+  mutate(time = factor(time, levels = c("before", "after"))) %>%
+  group_by(job) %>% 
+  mutate(count = n()) %>%
+  ggplot(aes(x = reorder(job, -count), fill = y)) + 
+  geom_bar() + 
+  xlab("job") + 
+  ylab("") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~time, ncol = 1)
+```
+
+### Age
+
+```{r, echo=FALSE}
+d %>%
+  mutate(time = ifelse(row_number() <= 27500, "before", "after")) %>%
+  mutate(time = factor(time, levels = c("before", "after"))) %>%
+  ggplot(aes(x = age, fill = y)) + 
+  geom_histogram(bins = 20) + 
+  xlab("job") + 
+  ylab("") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~time, ncol = 1)
+```
+
+### Education 
+
+```{r, echo=FALSE}
+d %>%
+  mutate(time = ifelse(row_number() <= 27500, "before", "after")) %>%
+  mutate(time = factor(time, levels = c("before", "after"))) %>%
+  group_by(education) %>% 
+  mutate(count = n()) %>%
+  ggplot(aes(x = reorder(education, -count), fill = y)) + 
+  geom_bar() + 
+  xlab("education") + 
+  ylab("") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~time, ncol = 1)
+```
+
+
+# Model
+
+Given the obvious changes both in the economy and in the targeting of the
+campaigns after the onset of the financial crisis, a model based on the whole
+data set is bound to give misleading results. The data set is therefore split
+into two data sets, "before" and "after" the onset of the financial crisis,
+using observation 27,500 as the cut-off. Each of these new data sets is then
+split into a training and a test set.
+
+```{r, include=FALSE}
+# index of observations in orginal data set before and after observation 27,500
+index_before <- 1:27500
+index_after <- 27501:nrow(d)
+length(index_before)
+length(index_after)
+length(index_before) + length(index_after) == nrow(d)
+
+# Splitting orginal data set into "before" and "after" set
+train_test_before <- d[index_before,]
+train_test_after <- d[index_after,]
+
+# new training and test set "before"
+
+# test set to be used for model selection, 10% of remaining data
+test_index_before <- createDataPartition(y = train_test_before$y, 
+                                         times = 1, p = 0.1, 
+                                         list = FALSE)
+train_before <- train_test_before[-test_index_before,]
+test_before <- train_test_before[test_index_before,]
+
+nrow(test_before) / (nrow(test_before) + nrow(train_before))
+
+# new training and test set "after"
+
+# test set to be used for model selection, 10% of remaining data
+test_index_after <- createDataPartition(y = train_test_after$y, 
+                                        times = 1, p = 0.1, 
+                                        list = FALSE)
+train_after <- train_test_after[-test_index_after,]
+test_after <- train_test_after[test_index_after,]
+
+nrow(test_after) / (nrow(test_after) + nrow(train_after))
+
+nrow(d) == nrow(train_before) + nrow(test_before) + 
+           nrow(train_after) + nrow(test_after)
+```
+
+Since there are many categorical variables and at least some effects of
+continuous variables (age!) may be nonlinear, a tree-based model is a natural
+choice. We will fit a simple boosted model using the gbm package:
+
+The emphasis here is on understanding what is roughly possible with the
+data before and after the onset of the financial crisis. Tuning the models
+by optimizing paramters would be a natural next step.
+
+## "Before"
+
+```{r, include=FALSE}
+set.seed(5)
+```
+
+Leaving out all economic variables and month to reduce effect of 
+beginning financial crisis on model. Also leaving out duration, 
+as well as the orginal y.
+
+```{r, include=FALSE}
+boost_before_3 <- gbm(y_bernoulli ~ ., 
+                      data = subset(train_before, 
+                                    select = -c(duration, month, euribor3m, emp.var.rate, 
+                                                cons.price.idx, cons.conf.idx, nr.employed,
+                                                y)),
+                      distribution = "bernoulli", 
+                      n.trees = 5000, 
+                      interaction.depth = 4)
+
+summary(boost_before_3)
+#                     var      rel.inf
+# job                 job 27.152056729
+# age                 age 19.571323650
+# education     education 16.539990870
+# day_of_week day_of_week 13.536900141
+# campaign       campaign  7.795835207
+# marital         marital  4.682135452
+# contact         contact  3.290501427
+# housing         housing  2.764413041
+# loan               loan  2.445246409
+# default         default  1.525721577
+# poutcome       poutcome  0.506492675
+# previous       previous  0.181584149
+# pdays             pdays  0.007798672
+```
+
+### test_before
+
+```{r, include=FALSE}
+yhat_boost_before <- predict(boost_before_3,
+                             type = "response",
+                             newdata = test_before,
+                             n.trees = 5000)
+
+summary(test_before$y_bernoulli == 1)
+summary(yhat_boost_before)
+# using cut-off for probability to predict a reasonable number of true "yes"
+summary(yhat_boost_before > 0.05)
+actual_before <- ifelse(test_before$y_bernoulli == 1, "yes", "no")
+predicted_before <- ifelse(yhat_boost_before > 0.05, "yes", "no")
+mean(actual_before == predicted_before)
+table(actual_before, predicted_before)
+
+plot(performance(prediction(predictions = yhat_boost_before, 
+                            labels = ifelse(test_before$y_bernoulli == 1, "yes", "no")), 
+                 "tpr", 
+                 "fpr"), 
+     print.cutoffs.at = c(0.05, 0.10, 0.15),
+     main = "GBM, Before")
+```
 
 ```{r}
-print("...")
+print("AUC: ")
 ```
 
-## Achieved Result
+This model is basically useless.
+
+## "After"
+
+Same as before:
+
+Leaving out all economic variables and month to reduce effect of 
+beginning financial crisis on model. Also leaving out duration, 
+as well as the orginal y.
+
+```{r, include=FALSE}
+
+boost_after_3 <- gbm(y_bernoulli ~ ., 
+                      data = subset(train_after, 
+                                    select = -c(duration, month, euribor3m, emp.var.rate, 
+                                                cons.price.idx, cons.conf.idx, nr.employed,
+                                                y)),
+                      distribution = "bernoulli", 
+                      n.trees = 5000, 
+                      interaction.depth = 4)
+
+summary(boost_after_3)
+#                     var    rel.inf
+# job                 job 24.7270879
+# age                 age 21.2481151
+# education     education 13.6982947
+# day_of_week day_of_week 11.4210767
+# pdays             pdays  8.8720524
+# campaign       campaign  4.7749730
+# poutcome       poutcome  3.5969610
+# marital         marital  3.3450231
+# housing         housing  2.4191063
+# previous       previous  2.3089277
+# loan               loan  1.8543587
+# contact         contact  0.9871851
+# default         default  0.7468385
+```
+
+### test_after
+
+```{r, include=FALSE}
+yhat_boost_after <- predict(boost_after_3,
+                             type = "response",
+                             newdata = test_after,
+                             n.trees = 5000)
+
+summary(test_after$y_bernoulli == 1)
+summary(yhat_boost_after)
+# using cut-off for probability to predict a reasonable number of true "yes"
+summary(yhat_boost_after > 0.20)
+actual_after <- ifelse(test_after$y_bernoulli == 1, "yes", "no")
+predicted_after <- ifelse(yhat_boost_after > 0.20, "yes", "no")
+mean(actual_after == predicted_after)
+table(actual_after, predicted_after)
+
+plot(performance(prediction(predictions = yhat_boost_after, 
+                            labels = ifelse(test_after$y_bernoulli == 1, "yes", "no")), 
+                 "tpr", 
+                 "fpr"), 
+     print.cutoffs.at = c(0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35),
+     main = "GBM, After")
+```
 
 ```{r}
-print("...")
+print("AUC: ")
 ```
+
+This looks much better. 
+
+
+## Results
+
+A commonly highly effective machine learning algorithm has been trained
+and tested both on the data before the onset of the financial crisis and 
+on the data after. The model trained on the earlier data has no predictive 
+power, which suggests that the data contains no useful signal. The model 
+trained on the later data, however, has considerable predictive power and could 
+have been used for optimizing campaigns. 
+
+Indeed, exploratory data analysis suggests that later campaigns
+were informed by such a model, systematically targeting 
+subgroups and calibrating the number of calls. It furthermore seems
+that earlier campaigns were not less successful because they did a poorer
+job at modeling, but because the market was much less susceptible to the
+offered product.
 
 
 # Conclusion
 
-... 
+It appears that the improvement of campaign performance
+was a result of a new, optimized approach that exploited changing attitudes
+in a country in crisis. In particular, it is conceivable that certain
+identifiable subgroups among the customers may have become more susceptible
+to sales pitches emphasizing security and wealth protection.
+
+

@@ -386,10 +386,14 @@ str(d)
 
 # nr.employed: solid downward trend after onset of crisis
 plot(d$nr.employed)
+d %>% mutate(observation = 1:n()) %>%
+  ggplot(aes(observation, nr.employed)) + geom_line()
 
 # emp.var.rate: similar to employed, but uptick towards the end 
 # (though still negative)
 plot(d$emp.var.rate)
+d %>% mutate(observation = 1:n()) %>%
+  ggplot(aes(observation, emp.var.rate)) + geom_line()
 
 # d$emp.var.rate and d$nr.employed are strongly correlated
 plot(d$emp.var.rate, d$nr.employed)
