@@ -1,7 +1,7 @@
 ---
 title: "Finding Opportunity in Crisis"
 author: "Jens Meydam"
-date: "2019-06-10"
+date: "2019-06-11"
 output: pdf_document
 ---
 
@@ -33,7 +33,7 @@ d <- read.table(csv_file, header = TRUE, sep = ";", stringsAsFactors = TRUE)
 
 
 # Add y_bernoulli for GBM, otherwise error message:
-# Bernoulli requires the response to be in {0,1}
+# "Bernoulli requires the response to be in {0,1}"
 d$y_bernoulli <- unclass(d$y) - 1
 
 ```
@@ -41,31 +41,31 @@ d$y_bernoulli <- unclass(d$y) - 1
 # Preliminary Remark
 
 This project is an exercise. The data set has been studied many times before,
-but at the time of this writing the author has not the slightest idea what 
-conclusions have been reached by others. Consequently, this study may turn 
-out to offer a fresh perspective, but it is more likely that it will 
-merely rediscover what has already been described more clearly elsewhere.
+but while working on this project I purposefully ignored previous efforts by others.
+
 
 # Executive Summary
 
-observations are ordered by date, from May 2008 to November 2010.
-- The observations cover the period from just before to two years 
-  after the onset of the global financial crisis. 
-  Lehman Brothers collapsed on September 15, 2008.
-  (https://en.wikipedia.org/wiki/Financial_crisis_of_2007%E2%80%932008)
+This is an analysis of the [bank marketing data set](http://archive.ics.uci.edu/ml/datasets/Bank+Marketing) 
+made available via the [UCI Machine Learning Repository](http://archive.ics.uci.edu/ml) 
+maintained by the University of California, Irvine. 
 
-"yes" responses, while present from the
-beginning, became much more frequent starting around observation 27'500,
-and ended up being more frequent than "no" responses.
+The data were collected during direct marketing campaigns run by a Portuguese bank. 
+The classification goal is to predict whether a client will accept the offer - made via 
+phone call - to invest money in a term deposit.
+
+Note that the data were collected from May 2008 to November 2010, covering the
+period from just before until two years into the financial crisis, and that 
+term deposits are considered a safe investment.
+
+The date of the observations is not given, but the observations are ordered by date. 
 
 If we measure the efficiency of the campaigns in terms of the ratio of
 "yes" to "no" responses, campaigns became daramatically more efficient
 - and in that sense more successful - starting around observation 27'500.
 
-There might be a causal connection between the efficiency/success
-of campaigns and a combination of economic indicators (in particular,
-the number of employees and the employment variation rate), but the
-improvement of the success rate might also be due to a learning effect:
+While the timing suggests that the state of the economy played a role,
+the improvement of the success rate might also be due to a learning effect:
 the campaigns towards the end may have learned lessons from previous
 campaigns and this might be an important reason why later campaigns
 were more efficient/successful.
@@ -73,20 +73,23 @@ were more efficient/successful.
 Could the improvement of campaign performance have com earlier, before
 the onset of the financial crisis?
 
-A commonly highly effective machine learning algorithm has been trained
-and tested both on the data before the onset of the financial crisis and 
-on the data after. The model trained on the earlier data has nor predictive 
-power, which suggests that the data contains no useful signal. The model 
-trained on the later data, however, has considerable predictive power and could 
-have been used for optimizing campaigns. Indeed, later campaigns
-appear to have been informed by such a model, systematically targeting 
-subgroups and calibrating the number of calls.
+At the end of this study, a commonly highly effective machine learning 
+algorithm is trained and tested both on the data before the onset of 
+the financial crisis and on the data after. The model trained on the earlier 
+data has no predictive power, which suggests that the data contain no useful 
+signal. (This is admittedly a strong claim, but seems fair as a first 
+approximation.)
 
-To conclude, it appears that the improvement of campaign performance
-was a result of a new, optimized approach that exploited changing attitudes
-in a country in crisis. In particular, it is conceivable that certain
-identifiable subgroups among the customers may have become more susceptible
-to sales pitches emphasizing security and wealth protection.
+The model trained on the later data, however, has considerable predictive 
+power and could have been used for optimizing campaigns. Indeed, later 
+campaigns appear to have been informed by such a model, systematically 
+targeting subgroups and calibrating the number of calls.
+
+Thus it appears that the improvement of campaign performance was a result of 
+a new, optimized approach that exploited changing attitudes in a country 
+in crisis. In particular, it is conceivable that certain identifiable subgroups 
+among the clients may have become more susceptible to sales pitches emphasizing 
+security and wealth protection - although this is mere speculation.
 
 
 # Introduction
@@ -99,9 +102,9 @@ maintained by the University of California, Irvine.
 
 (Further details below.)
 
-As stated on the website:
+As stated on the website, the data were collected during
 
-> The data is related with direct marketing campaigns (phone calls) of a Portuguese banking institution. The classification goal is to predict if the client will subscribe [to] a term deposit (variable y).
+> [...] direct marketing campaigns (phone calls) of a Portuguese banking institution. The classification goal is to predict if the client will subscribe [to] a term deposit (variable y).
 
 [Background info term deposit](https://www.investopedia.com/terms/t/termdeposit.asp):
 
