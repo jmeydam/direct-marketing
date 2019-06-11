@@ -85,11 +85,13 @@ power and could have been used for optimizing campaigns. Indeed, later
 campaigns appear to have been informed by such a model, systematically 
 targeting subgroups and calibrating the number of calls.
 
-Thus it appears that the improvement of campaign performance was a result of 
-a new, optimized approach that exploited changing attitudes in a country 
-in crisis. In particular, it is conceivable that certain identifiable subgroups 
-among the clients may have become more susceptible to sales pitches emphasizing 
-security and wealth protection - although this is mere speculation.
+Thus it appears that the improvement of campaign performance was a result 
+of a new, optimized approach that exploited changing attitudes in a country 
+in crisis, and that a similar improvement would not have been possible before. 
+
+In particular, it is conceivable that certain identifiable subgroups 
+among the clients may have become more susceptible to sales pitches 
+emphasizing security and wealth protection - although this is mere speculation.
 
 
 # Introduction
