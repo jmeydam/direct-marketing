@@ -128,13 +128,9 @@ Background information on term deposits:
 >
 > [...] Term deposits are an extremely safe investment and are therefore very appealing to conservative, low-risk investors.
 
-## Variables
-
-See: 
 > <http://archive.ics.uci.edu/ml/datasets/Bank+Marketing>
 
-
-### Attributes from Bank Client Data
+## Attributes from Bank Client Data
 
 1. age (numeric)
 2. job: type of job (categorical: "admin.", "blue-collar", "entrepreneur", "housemaid", "management", "retired", "self-employed", "services", "student", "technician", "unemployed", "unknown")
@@ -144,43 +140,31 @@ See:
 6. housing: has housing loan? (categorical: "no", "yes", "unknown")
 7. loan: has personal loan? (categorical: "no", "yes", "unknown")
 
-### Attributes Related to the Last Contact of the Current Campaign
+## Attributes Related to the Last Contact of the Current Campaign
 
 8. contact: contact communication type (categorical: "cellular", "telephone") 
 9. month: last contact month of year (categorical: "jan", "feb", "mar", ..., "nov", "dec")
 10. day_of_week: last contact day of the week (categorical: "mon", "tue", "wed", "thu", "fri")
 11. duration: last contact duration, in seconds (numeric). Important note:  this attribute highly affects the output target (e.g., if duration=0 then y="no"). Yet, the duration is not known before a call is performed. Also, after the end of the call y is obviously known. Thus, this input should only be included for benchmark purposes and should be discarded if the intention is to have a realistic predictive model.
 
-### Other Attributes
+## Other Attributes
 
 12. campaign: number of contacts performed during this campaign and for this client (numeric, includes last contact)
 13. pdays: number of days that passed by after the client was last contacted from a previous campaign (numeric; 999 means client was not previously contacted)
 14. previous: number of contacts performed before this campaign and for this client (numeric)
 15. poutcome: outcome of the previous marketing campaign (categorical: "failure", "nonexistent", "success")
 
-### Social and Economic Context Attributes
+## Social and Economic Context Attributes
 
 16. emp.var.rate: employment variation rate - quarterly indicator (numeric)
 17. cons.price.idx: consumer price index - monthly indicator (numeric)     
 18. cons.conf.idx: consumer confidence index - monthly indicator (numeric)     
 19. euribor3m: euribor 3 month rate - daily indicator (numeric)
-20. nr.employed: number of employees - quarterly indicator (numeric)
+20. nr.employed: number of people employed - quarterly indicator (numeric)
 
-### Output Variable (Target)
+## Output Variable (Target)
 
 21. y: has the client subscribed a term deposit? (binary: "yes", "no")
-
-Added for GBM: y_bernoulli (0 = "no", 1 = "yes")
-
-## Result of Preliminary Exploration of Data
-
-Conclusion: data ready for use in models
-
-- No obviously wrong values, e.g., distribution of age as expected
-- No NAs; missing values are encoded ("unknown")
-- The proportion of missing values is small
-
-## Added Variable y_bernoulli
 
 Added for GBM: y_bernoulli (0 = "no", 1 = "yes")
 
@@ -191,13 +175,10 @@ Added for GBM: y_bernoulli (0 = "no", 1 = "yes")
 
 Most of these variables are correlated.
 
-We show one example:
-
-nr.employed: number of employees - quarterly indicator (numeric)
+In this report we will focus on one example: the number of people employed.
 
 Looking at change over time may help to understand patterns.
-
-The date is not given, but, according to data set documentation,
+The date is not given, but, according to the data set documentation,
 the observations are ordered by date, from May 2008 to November 2010.
 Therefore, plotting the data in sequence will give an approximation 
 to a proper time series.
@@ -212,42 +193,70 @@ Note:
 - Higher variability after observation 36,000 is partly due 
   to fewer observations per time unit (fewer/lower intensity campaigns)
 
-nr.employed: number of employees
-solid downward trend after onset of crisis
-
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>%
-  ggplot(aes(observation, nr.employed)) + geom_line()
+  ggplot(aes(observation, nr.employed)) + 
+  geom_line() +
+  ggtitle("Number of People Employed")
 ```
 
-nr.employed with response "yes" / "no"
-Jittering the points to make changing frequencies more obvious.
+Note the solid downward trend after the onset of the crisis.
+
+Now we will also show the responses ("yes"/"no"). We will
+show responses as jittered points to make gradual changes in 
+frequency easier to see. 
 
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>% 
   ggplot(aes(x = observation, y = nr.employed, color = y)) + 
   geom_point(position = position_jitter(width = 0, height = 20),
-             alpha = 0.4)
+             alpha = 0.4) +
+  ggtitle("Number of People Employed, With Response")
 ```
 
+Note how "yes" responses become more dominant towards the end.
+Keep in mind that observations are not evenly distributed in 
+time. The number of people employed is a quaterly indicator; 
+apparent accelerated change towards the end is an effect
+of having fewer observations per time unit.  
 
-Plot density curves of "yes" and "no" responses
+While there are "yes" responses throughout, the "no" responses 
+appear to drown out the "yes" responses for most of the plot. 
+Next, to see trends for both responses more clearly, we will plot 
+density curves of "yes" and "no" responses. These curves are 
+smoothed and normalized so that they each integrate to 1.
 
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>%
   ggplot(aes(x = observation, color = y)) + 
-  geom_line(stat = "density")
+  geom_line(stat = "density") +
+  ggtitle("Changing Freqeuncy of Responses as Densities")
 ```
 
-Bin observations in groups of 2,500, then plot "yes", "no"
+Note the gradual increase of the frequency of "yes" responses
+in much of the first half, followed by steep bump just before 
+observation 30'000, and then a solid rise (the drop at the end
+is an artifact of the plot). 
+
+Next, to show the changing share of "yes" and "no" responses,
+we will bin observations in groups of 2,500.
 
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>%
   mutate(group = (observation %/% 2500) * 2500) %>%
   group_by(group) %>%
   ggplot(aes(x = group, fill = y)) + 
-  geom_bar(position = position_stack())
+  geom_bar(position = position_stack()) +
+  ggtitle("Changing Share of Responses")
 ```
+
+Note the much lower prevalence of "yes" responses in the first two thirds
+of the plot. Again, the lower bar at the end of the plot and consequently 
+the apparent drop both of "yes" and "no" responses is an artifact of the 
+plot. In fact, the share of "yes" responses rises to over 50% in the last 
+bar.
+
+####################
 
 In the first visual displays of the data, until about observation 36,000,
 the "no" responses drowned out the "yes" responses  - even using high
@@ -265,14 +274,14 @@ If we measure the efficiency of the campaigns in terms of the ratio of
 - and in that sense more successful - starting around observation 27'500.
 
 The most efficient campaigns towards the end can also be identified via
-nr.employed, since the number of employees is decreasing for the second
+nr.employed, since the number of people employed is decreasing for the second
 half of the observations and is significantly lower towards the end.
 The employment variation rate (emp.var.rate) can also be used to detect
 observations from 27'500 onwards.
 
 There might be a causal connection between the efficiency / success
 of campaigns and a combination of economic indicators (in particular,
-the number of employees and the employment variation rate), but the
+the number of people employed and the employment variation rate), but the
 improvement of the success rate might also be due to a learning effect:
 the campaigns towards the end may have learned lessons from previous
 campaigns and this might be an important reason why later campaigns
