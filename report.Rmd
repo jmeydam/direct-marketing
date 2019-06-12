@@ -76,23 +76,26 @@ the onset of the financial crisis?
 
 At the end of this study, a commonly highly effective machine learning 
 algorithm is trained and tested both on the data before the onset of 
-the financial crisis and on the data after. The model trained on the earlier 
-data has no predictive power, which suggests that the data contain no useful 
-signal. (This is admittedly a strong claim, but seems fair as a first 
-approximation.)
+the financial crisis and on the data after. 
 
-The model trained on the later data, however, has considerable predictive 
-power and could have been used for optimizing campaigns. Indeed, later 
-campaigns appear to have been informed by such a model, systematically 
-targeting subgroups and calibrating the number of calls.
+The model trained on the earlier data has no predictive power, which 
+suggests that the data contain no useful signal. 
 
-Thus it appears that the improvement of campaign performance was a result 
+In contrast, the model trained on the later data has considerable 
+predictive power and could have been used for optimizing campaigns. 
+Indeed, later campaigns appear to have been informed by such a model, 
+systematically targeting subgroups and calibrating the number of calls.
+
+Our claim is not so much that the earlier data are in fact completely 
+useless, but that the later data became strikingly more useful.
+
+It appears that the improvement of campaign performance was a result 
 of a new, optimized approach that exploited changing attitudes in a country 
-in crisis, and that a similar improvement would not have been possible before. 
+in crisis, and that a similar improvement would not have been possible before.
 
 In particular, it is conceivable that certain identifiable subgroups 
 among the clients may have become more susceptible to sales pitches 
-emphasizing security and wealth protection - although this is mere speculation.
+emphasizing security and wealth protection, but this is mere speculation.
 
 
 # Data Set
@@ -235,7 +238,7 @@ d %>% mutate(observation = 1:n()) %>%
 
 Note the gradual increase of the frequency of "yes" responses
 in much of the first half, followed by steep bump just before 
-observation 30'000, and then a solid rise (the drop at the end
+observation 30,000, and then a solid rise (the drop at the end
 is an artifact of the plot). 
 
 Next, to show the changing share of "yes" and "no" responses,
@@ -251,10 +254,9 @@ d %>% mutate(observation = 1:n()) %>%
 ```
 
 Note the much lower prevalence of "yes" responses in the first two thirds
-of the plot. Again, the lower bar at the end of the plot and consequently 
-the apparent drop both of "yes" and "no" responses is an artifact of the 
-plot. In fact, the share of "yes" responses rises to over 50% in the last 
-bar.
+of the plot. Again, the lower bar at the end and consequently the apparent 
+drop both of "yes" and "no" responses is an artifact of the plot. In fact, 
+the share of "yes" responses rises to over 50% in the last bar.
 
 ####################
 
