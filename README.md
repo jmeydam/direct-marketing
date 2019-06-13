@@ -17,7 +17,6 @@ maintained by the University of California, Irvine.
 The data were collected during direct marketing campaigns run by a Portuguese 
 bank. The classification goal is to predict whether a client will accept the 
 offer - made via phone call - to invest money in a term deposit.
-
 Note that the data were collected from May 2008 to November 2010, covering the
 period from just before until two years into the financial crisis, and that 
 term deposits are considered a safe investment.
@@ -25,7 +24,6 @@ term deposits are considered a safe investment.
 The date of the observations is not given, but the 41,188 observations are 
 ordered by date. There is a sharp drop in the [3 month Euribor interest rate](https://www.investopedia.com/terms/e/euribor.asp) 
 aoround observation 25,000.
-
 If we measure the efficiency of campaigns in terms of the relative
 frequency of positive responses, campaigns became dramatically more 
 efficient - and in that sense more successful - starting around 
@@ -44,10 +42,8 @@ At the end of this study, a commonly highly effective machine learning
 algorithm is trained and tested both on the data before the onset of 
 the financial crisis and on the data after, excluding as far as possible
 information on the state of the economy. 
-
 The model trained on the earlier data has no predictive power, which 
 suggests that the data contain no useful signal. 
-
 In contrast, the model trained on the later data has considerable 
 predictive power and could have been used for optimizing campaigns. 
 In fact, later campaigns appear to have been informed by such a model, 
@@ -55,15 +51,14 @@ systematically targeting subgroups and calibrating the number of calls.
 
 Our claim is not so much that the earlier data are in fact completely 
 useless, but that the later data are strikingly more useful. Dramatic
-changes in the economy led to the amplification of signals in the data 
-and/or to the emergence of entirely new signals. We suggest this as 
-a potentially fruitful avenue for further research.
+changes in the economy may have led to the amplification of signals 
+in the data and/or to the emergence of entirely new signals. We suggest 
+this as a potentially fruitful avenue for further research.
 
 To conclude, it appears that the marked improvement of campaign performance 
 was the result of a new, optimized approach that exploited changing 
 attitudes in a country in crisis, and that a similar improvement would 
 not have been possible before.
-
 In particular, it is conceivable that certain identifiable subgroups 
 among the clients may have become more susceptible to sales pitches 
 emphasizing security and wealth protection, but this is mere speculation.
