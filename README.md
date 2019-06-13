@@ -27,8 +27,9 @@ ordered by date. There is a sharp drop in the [3 month Euribor interest rate](ht
 aoround observation 25,000.
 
 If we measure the efficiency of campaigns in terms of the relative
-frequency of positive responses, campaigns became dramatically more efficient
-- and in that sense more successful - starting around observation 27,500.
+frequency of positive responses, campaigns became dramatically more 
+efficient - and in that sense more successful - starting around 
+observation 27,500.
 
 While the timing suggests that the state of the economy played a role,
 the improvement of the success rate might also be due to a learning effect:
