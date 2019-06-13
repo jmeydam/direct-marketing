@@ -154,7 +154,7 @@ Background information on term deposits:
 8. contact: contact communication type (categorical: "cellular", "telephone") 
 9. month: last contact month of year (categorical: "jan", "feb", "mar", ..., "nov", "dec")
 10. day_of_week: last contact day of the week (categorical: "mon", "tue", "wed", "thu", "fri")
-11. duration: last contact duration, in seconds (numeric). Important note:  this attribute highly affects the output target (e.g., if duration=0 then y="no"). Yet, the duration is not known before a call is performed. Also, after the end of the call y is obviously known. Thus, this input should only be included for benchmark purposes and should be discarded if the intention is to have a realistic predictive model.
+11. duration: last contact duration, in seconds (numeric). **Important note**:  this attribute highly affects the output target (e.g., if duration=0 then y="no"). Yet, the duration is not known before a call is performed. Also, after the end of the call y is obviously known. Thus, this input should only be included for benchmark purposes and should be discarded if the intention is to have a realistic predictive model.
 
 ## Other Attributes
 
@@ -182,15 +182,22 @@ Added for GBM: y_bernoulli (0 = "no", 1 = "yes")
 
 ## Social and Economic Context Attributes
 
-Most of these variables are correlated.
+Most of these variables are correlated. 
 
-In this report we will focus on one example: the number of people employed.
-
-Looking at change over time may help to understand patterns.
-The date is not given, but, according to the data set documentation,
-the observations are ordered by date, from May 2008 to November 2010.
-Therefore, plotting the data in sequence will give an approximation 
+The date of the 41'188 observations observations is not given, but
+are ordered by date, from May 2008 to November 2010. Therefore, 
+plotting the data in sequence will give an approximation 
 to a proper time series.
+
+There is a sharp drop in the [3 month Euribor interest rate](https://www.investopedia.com/terms/e/euribor.asp) 
+aoround observation 25'000.
+
+```{r, echo=FALSE}
+d %>% mutate(observation = 1:n()) %>%
+  ggplot(aes(observation, euribor3m)) + 
+  geom_line() +
+  ggtitle("3 Month Euribor Interest Rate")
+```
 
 Note:
 
@@ -201,6 +208,9 @@ Note:
 - The observations are not evenly distributed in time. 
 - Higher variability after observation 36,000 is partly due 
   to fewer observations per time unit (fewer/lower intensity campaigns)
+  
+In the rest of this section we will focus on the the number of people 
+employed. Note the solid downward trend after the onset of the crisis:  
 
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>%
@@ -208,8 +218,6 @@ d %>% mutate(observation = 1:n()) %>%
   geom_line() +
   ggtitle("Number of People Employed")
 ```
-
-Note the solid downward trend after the onset of the crisis.
 
 Now we will also show the responses ("yes"/"no"). We will
 show responses as jittered points to make gradual changes in 
@@ -233,7 +241,7 @@ While there are "yes" responses throughout, the "no" responses
 appear to drown out the "yes" responses for most of the plot. 
 Next, to see trends for both responses more clearly, we will plot 
 density curves of "yes" and "no" responses. These curves are 
-smoothed and normalized so that they each integrate to 1.
+smoothed and normalized so that each curve integrates to 1.
 
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>%
@@ -242,10 +250,10 @@ d %>% mutate(observation = 1:n()) %>%
   ggtitle("Changing Freqeuncy of Responses as Densities")
 ```
 
-Note the gradual increase of the frequency of "yes" responses
-in much of the first half, followed by steep bump just before 
-observation 30,000, and then a solid rise (the drop at the end
-is an artifact of the plot). 
+Note the slow, then halting increase in the frequency of "yes" 
+responses before the financial crisis, followed by steep bump 
+just before observation 30,000, and then a solid rise (the drop 
+at the end is an artifact of the plot). 
 
 Next, to show the changing share of "yes" and "no" responses,
 we will bin observations in groups of 2,500.
@@ -264,14 +272,14 @@ of the plot. Again, the lower bar at the end and consequently the apparent
 drop both of "yes" and "no" responses is an artifact of the plot. In fact, 
 the share of "yes" responses rises to over 50% in the last bar.
 
-####################
+### Thoughts
 
 In the first visual displays of the data, until about observation 36,000,
 the "no" responses drowned out the "yes" responses  - even using high
 levels of jitter and transparency left some uncertainty concerning
-the changing frequency of "yes" responses. After observation 36,000
-the "no" responses drop dramatically, making the "yes" responses clearly
-visible even in the first plots.
+the changing absolute frequency of "yes" responses. After observation 
+36,000 the relative frequency of "no" responses drop dramatically, 
+making the "yes" responses clearly visible.
 
 Further analysis confirmed that "yes" responses, while present from the
 beginning, became much more frequent starting around observation 27'500,
@@ -316,10 +324,16 @@ As we will see later, three attributes are particularly relevant:
 2. Age
 3. Education
 
-Here we will focus on these three attributes, contrasting the frequencies
+We will show graphs for these three attributes, contrasting the frequencies
 of the various values "before" and "after", while also showing the response y.
 
-### Job
+Note the changes after the onset of the financial crisis. In general,
+the share of positive responses has increased. Categories and ranges with
+relatively many positive responses show a marked increase, some more so 
+than others. Some categories and ranges that were previously hardly 
+represented or not represented at all become noticeable, with very high 
+shares of positive responses, in particuar the categories "student" 
+and "retired" and the associated age ranges.
 
 ```{r, echo=FALSE}
 d %>%
@@ -332,10 +346,9 @@ d %>%
   xlab("job") + 
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~time, ncol = 1)
+  facet_wrap(~time, ncol = 1) +
+  ggtitle("Job")
 ```
-
-### Age
 
 ```{r, echo=FALSE}
 d %>%
@@ -346,10 +359,9 @@ d %>%
   xlab("job") + 
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~time, ncol = 1)
+  facet_wrap(~time, ncol = 1)f +
+  ggtitle("Age")
 ```
-
-### Education 
 
 ```{r, echo=FALSE}
 d %>%
@@ -362,8 +374,15 @@ d %>%
   xlab("education") + 
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~time, ncol = 1)
+  facet_wrap(~time, ncol = 1) +
+  ggtitle("Education")
 ```
+
+### Thoughts
+
+A general effect of the financial crisis is highly likely. However,
+the emergence of new groups with high success rates points to changes
+in the targeting of the campaigns. 
 
 
 # Model
@@ -415,11 +434,14 @@ nrow(d) == nrow(train_before) + nrow(test_before) +
 
 Since there are many categorical variables and at least some effects of
 continuous variables (age!) may be nonlinear, a tree-based model is a natural
-choice. We will fit a simple boosted model using the gbm package:
+choice. We will fit a simple boosted model using the 
+[gbm package](https://cran.r-project.org/web/packages/gbm/index.html).
 
 The emphasis here is on understanding what is roughly possible with the
-data before and after the onset of the financial crisis. Tuning the models
-by optimizing paramters would be a natural next step.
+data before and after the onset of the financial crisis, while leaving out all 
+economic variables and the month to reduce timing effects. 
+
+Tuning the models by optimizing paramters would be a natural next step.
 
 ## "Before"
 
@@ -427,11 +449,7 @@ by optimizing paramters would be a natural next step.
 set.seed(5)
 ```
 
-Leaving out all economic variables and month to reduce effect of 
-beginning financial crisis on model. Also leaving out duration, 
-as well as the orginal y.
-
-```{r, include=FALSE}
+```{r}
 boost_before_3 <- gbm(y_bernoulli ~ ., 
                       data = subset(train_before, 
                                     select = -c(duration, month, euribor3m, emp.var.rate, 
@@ -460,7 +478,7 @@ summary(boost_before_3)
 
 ### test_before
 
-```{r, include=FALSE}
+```{r}
 yhat_boost_before <- predict(boost_before_3,
                              type = "response",
                              newdata = test_before,
@@ -483,21 +501,13 @@ plot(performance(prediction(predictions = yhat_boost_before,
      main = "GBM, Before")
 ```
 
-```{r}
-print("AUC: ")
-```
-
-This model is basically useless.
+This model is basically useless. Inspecting the ROC curve shows that the model performs
+at the level of random guessing.
 
 ## "After"
 
-Same as before:
 
-Leaving out all economic variables and month to reduce effect of 
-beginning financial crisis on model. Also leaving out duration, 
-as well as the orginal y.
-
-```{r, include=FALSE}
+```{r}
 
 boost_after_3 <- gbm(y_bernoulli ~ ., 
                       data = subset(train_after, 
@@ -527,7 +537,7 @@ summary(boost_after_3)
 
 ### test_after
 
-```{r, include=FALSE}
+```{r}
 yhat_boost_after <- predict(boost_after_3,
                              type = "response",
                              newdata = test_after,
@@ -550,36 +560,42 @@ plot(performance(prediction(predictions = yhat_boost_after,
      main = "GBM, After")
 ```
 
-```{r}
-print("AUC: ")
-```
-
-This looks much better. 
+This model clearly has predictive power. A cut-off can be chosen to calibrate
+campaigns, for example to improve the proportion of positive responses
+or to reach a target number of positive responses.
 
 
 ## Results
 
-A commonly highly effective machine learning algorithm has been trained
-and tested both on the data before the onset of the financial crisis and 
-on the data after. The model trained on the earlier data has no predictive 
-power, which suggests that the data contains no useful signal. The model 
-trained on the later data, however, has considerable predictive power and could 
-have been used for optimizing campaigns. 
+A commonly highly effective machine learning algorithm was trained and 
+tested both on the data before the onset of the financial crisis and 
+on the data after, excluding as far as possible information on the 
+state of the economy. 
 
-Indeed, exploratory data analysis suggests that later campaigns
-were informed by such a model, systematically targeting 
-subgroups and calibrating the number of calls. It furthermore seems
-that earlier campaigns were not less successful because they did a poorer
-job at modeling, but because the market was much less susceptible to the
-offered product.
+The model trained on the earlier data has no predictive power, which 
+suggests that the data contain no useful signal. 
+
+In contrast, the model trained on the later data has considerable 
+predictive power and could have been used for optimizing campaigns. 
+Indeed, as pointed out earlier, later campaigns appear to have been  
+systematically targeting subgroups. It can be assumed that later 
+campaigns were based on models similar to the one presented here.
+
+Our claim is not so much that the earlier data are in fact completely 
+useless, but that the later data are strikingly more useful. Dramatic
+changes in the economy led to the amplification of signals in the data 
+and/or to the emergence of entirely new signals. We suggest this as 
+a potentially fruitful avenue for further research.
 
 
 # Conclusion
 
-It appears that the improvement of campaign performance
-was a result of a new, optimized approach that exploited changing attitudes
-in a country in crisis. In particular, it is conceivable that certain
-identifiable subgroups among the customers may have become more susceptible
-to sales pitches emphasizing security and wealth protection.
+It appears that the marked improvement of campaign performance 
+was the result of a new, optimized approach that exploited changing 
+attitudes in a country in crisis, and that a similar improvement would 
+not have been possible before.
 
+In particular, it is conceivable that certain identifiable subgroups 
+among the clients may have become more susceptible to sales pitches 
+emphasizing security and wealth protection, but this is mere speculation.
 
