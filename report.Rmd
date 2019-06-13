@@ -58,13 +58,13 @@ Note that the data were collected from May 2008 to November 2010, covering the
 period from just before until two years into the financial crisis, and that 
 term deposits are considered a safe investment.
 
-The date of the observations is not given, but the 41'188 observations are 
+The date of the observations is not given, but the 41,188 observations are 
 ordered by date. There is a sharp drop in the [3 month Euribor interest rate](https://www.investopedia.com/terms/e/euribor.asp) 
-aoround observation 25'000.
+aoround observation 25,000.
 
 If we measure the efficiency of campaigns in terms of the relative
-frequency of positive responses, campaigns became daramatically more efficient
-- and in that sense more successful - starting around observation 27'500.
+frequency of positive responses, campaigns became dramatically more efficient
+- and in that sense more successful - starting around observation 27,500.
 
 While the timing suggests that the state of the economy played a role,
 the improvement of the success rate might also be due to a learning effect:
@@ -187,13 +187,13 @@ Added for GBM: y_bernoulli (0 = "no", 1 = "yes")
 
 Most of these variables are correlated. 
 
-The date of the 41'188 observations observations is not given, but
+The date of the 41,188 observations is not given, but
 are ordered by date, from May 2008 to November 2010. Therefore, 
 plotting the data in sequence will give an approximation 
 to a proper time series.
 
 There is a sharp drop in the [3 month Euribor interest rate](https://www.investopedia.com/terms/e/euribor.asp) 
-aoround observation 25'000.
+aoround observation 25,000.
 
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>%
@@ -236,7 +236,7 @@ d %>% mutate(observation = 1:n()) %>%
 
 Note how "yes" responses become more dominant towards the end.
 Keep in mind that observations are not evenly distributed in 
-time. The number of people employed is a quaterly indicator; 
+time. The number of people employed is a quarterly indicator; 
 apparent accelerated change towards the end is an effect
 of having fewer observations per time unit.  
 
@@ -289,14 +289,14 @@ beginning, became much more frequent starting around observation 27'500,
 and ended up being more frequent than "no" responses.
 
 If we measure the efficiency of the campaigns in terms of the ratio of
-"yes" to "no" responses, campaigns became daramatically more efficient
+"yes" to "no" responses, campaigns became dramatically more efficient
 - and in that sense more successful - starting around observation 27'500.
 
 The most efficient campaigns towards the end can also be identified via
 nr.employed, since the number of people employed is decreasing for the second
 half of the observations and is significantly lower towards the end.
 The employment variation rate (emp.var.rate) can also be used to detect
-observations from 27'500 onwards.
+observations from 27,500 onwards.
 
 There might be a causal connection between the efficiency / success
 of campaigns and a combination of economic indicators (in particular,
@@ -307,12 +307,12 @@ campaigns and this might be an important reason why later campaigns
 were more efficient/successful.
 
 It is worth noting that after an initial dramatic improvement around
-observation 27'500 performance first went back to the previous level,
+observation 27,500 performance first went back to the previous level,
 then returned to the improved level, and then improved even further.
 It is conceivable that this discontinuity and further accelerated
 improvement is a result of different campaigns using different
 approaches, with systematic optimization of the approach after a
-brief delay after a first breakthrough around observation 27'500.
+brief delay after a first breakthrough around observation 27,500.
 This new, optimized approach might have exploited changing attitudes
 in a country in crisis. In particular, it is conceivable that certain
 identifiable subgroups among the customers may have become more susceptible
@@ -335,7 +335,7 @@ the share of positive responses has increased. Categories and ranges with
 relatively many positive responses show a marked increase, some more so 
 than others. Some categories and ranges that were previously hardly 
 represented or not represented at all become noticeable, with very high 
-shares of positive responses, in particuar the categories "student" 
+shares of positive responses, in particular the categories "student" 
 and "retired" and the associated age ranges.
 
 ```{r, echo=FALSE}
@@ -444,7 +444,7 @@ The emphasis here is on understanding what is roughly possible with the
 data before and after the onset of the financial crisis, while leaving out all 
 economic variables and the month to reduce timing effects. 
 
-Tuning the models by optimizing paramters would be a natural next step.
+Tuning the models by optimizing parameters would be a natural next step.
 
 
 ## Before Onset of Financial Crisis
