@@ -1,97 +1,68 @@
-# Direct Marketing
-
-## Introduction
+# Finding Opportunity in Crisis
 
 This is the second capstone project for 
 [HarvardX: PH125.9x](https://www.edx.org/professional-certificate/harvardx-data-science) 
 on [edX](https://www.edx.org).
 
+All results are derived from the data set and the accompanying documentation.
+
 Instructor edX course: [Prof. Rafael Irizarry](https://www.hsph.harvard.edu/rafael-irizarry/).
 
-This project is organized along the lines of the 
-[first capstone project](https://github.com/jmeydam/movielens). 
-Whereas in the first project the data and task were given, and the analyis had 
-already been covered extensively in class, the data, task and approach for the 
-second project have to be chosen by the students.
+## Executive Summary
 
-The data set chosen for this project is the 
-[bank marketing data set](http://archive.ics.uci.edu/ml/datasets/Bank+Marketing) 
+This is an analysis of the [bank marketing data set](http://archive.ics.uci.edu/ml/datasets/Bank+Marketing) 
 made available via the [UCI Machine Learning Repository](http://archive.ics.uci.edu/ml) 
-maintained by the University of California, Irvine. As stated on the website:
+maintained by the University of California, Irvine. 
 
-> The data is related with direct marketing campaigns (phone calls) of a Portuguese banking institution. The classification goal is to predict if the client will subscribe [to] a term deposit (variable y).
+The data were collected during direct marketing campaigns run by a Portuguese 
+bank. The classification goal is to predict whether a client will accept the 
+offer - made via phone call - to invest money in a term deposit.
 
-Full citation for data set: 
+Note that the data were collected from May 2008 to November 2010, covering the
+period from just before until two years into the financial crisis, and that 
+term deposits are considered a safe investment.
 
-> [Moro et al., 2014] S. Moro, P. Cortez and P. Rita. A Data-Driven Approach to Predict the Success of Bank Telemarketing. Decision Support Systems, Elsevier, 62:22-31, June 2014
+The date of the observations is not given, but the 41,188 observations are 
+ordered by date. There is a sharp drop in the [3 month Euribor interest rate](https://www.investopedia.com/terms/e/euribor.asp) 
+aoround observation 25,000.
 
-[Background info term deposit](https://www.investopedia.com/terms/t/termdeposit.asp):
+If we measure the efficiency of campaigns in terms of the relative
+frequency of positive responses, campaigns became dramatically more efficient
+- and in that sense more successful - starting around observation 27,500.
 
-> A term deposit is a fixed-term investment that includes the deposit of money into an account at a financial institution. Term deposit investments usually carry short-term maturities ranging from one month to a few years and will have varying levels of required minimum deposits.
-> 
-> The investor must understand when buying a term deposit that they can withdraw their funds only after the term ends. In some cases, the account holder may allow the investor early termination—or withdrawal—if they give several days notification. Also, there will be a penalty assessed for early termination.
+While the timing suggests that the state of the economy played a role,
+the improvement of the success rate might also be due to a learning effect:
+the campaigns towards the end may have learned lessons from previous
+campaigns and this might be an important reason why later campaigns
+were more efficient/successful.
 
+Could the improvement of campaign performance have come earlier, before
+the onset of the financial crisis?
 
-## Data
+At the end of this study, a commonly highly effective machine learning 
+algorithm is trained and tested both on the data before the onset of 
+the financial crisis and on the data after, excluding as far as possible
+information on the state of the economy. 
 
-(Source: <http://archive.ics.uci.edu/ml/datasets/Bank+Marketing>)
+The model trained on the earlier data has no predictive power, which 
+suggests that the data contain no useful signal. 
 
-### Data Set Used
+In contrast, the model trained on the later data has considerable 
+predictive power and could have been used for optimizing campaigns. 
+In fact, later campaigns appear to have been informed by such a model, 
+systematically targeting subgroups and calibrating the number of calls.
 
-bank-additional-full.csv with all examples (41188) and 20 inputs, ordered by date (from May 2008 to November 2010), very close to the data analyzed in [Moro et al., 2014].
+Our claim is not so much that the earlier data are in fact completely 
+useless, but that the later data are strikingly more useful. Dramatic
+changes in the economy led to the amplification of signals in the data 
+and/or to the emergence of entirely new signals. We suggest this as 
+a potentially fruitful avenue for further research.
 
-### Download Link
+To conclude, it appears that the marked improvement of campaign performance 
+was the result of a new, optimized approach that exploited changing 
+attitudes in a country in crisis, and that a similar improvement would 
+not have been possible before.
 
-<http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip>
-
-### Variables
-
-#### Attributes from Bank Client Data
-
-1. age (numeric)
-2. job: type of job (categorical: "admin.", "blue-collar", "entrepreneur", "housemaid", "management", "retired", "self-employed", "services", "student", "technician", "unemployed", "unknown")
-3. marital: marital status (categorical: "divorced", "married", "single", "unknown"; note: "divorced" means divorced or widowed)
-4. education (categorical: "basic.4y", "basic.6y", "basic.9y", "high.school", "illiterate", "professional.course", "university.degree", "unknown")
-5. default: has credit in default? (categorical: "no", "yes", "unknown")
-6. housing: has housing loan? (categorical: "no", "yes", "unknown")
-7. loan: has personal loan? (categorical: "no", "yes", "unknown")
-
-#### Attributes Related to the Last Contact of the Current Campaign
-
-8. contact: contact communication type (categorical: "cellular", "telephone") 
-9. month: last contact month of year (categorical: "jan", "feb", "mar", ..., "nov", "dec")
-10. day_of_week: last contact day of the week (categorical: "mon", "tue", "wed", "thu", "fri")
-11. duration: last contact duration, in seconds (numeric). Important note:  this attribute highly affects the output target (e.g., if duration=0 then y="no"). Yet, the duration is not known before a call is performed. Also, after the end of the call y is obviously known. Thus, this input should only be included for benchmark purposes and should be discarded if the intention is to have a realistic predictive model.
-
-#### Other Attributes
-
-12. campaign: number of contacts performed during this campaign and for this client (numeric, includes last contact)
-13. pdays: number of days that passed by after the client was last contacted from a previous campaign (numeric; 999 means client was not previously contacted)
-14. previous: number of contacts performed before this campaign and for this client (numeric)
-15. poutcome: outcome of the previous marketing campaign (categorical: "failure", "nonexistent", "success")
-
-#### Social and Economic Context Attributes
-
-16. emp.var.rate: employment variation rate - quarterly indicator (numeric)
-17. cons.price.idx: consumer price index - monthly indicator (numeric)     
-18. cons.conf.idx: consumer confidence index - monthly indicator (numeric)     
-19. euribor3m: euribor 3 month rate - daily indicator (numeric)
-20. nr.employed: number of employees - quarterly indicator (numeric)
-
-#### Output Variable (Target)
-
-21. y: has the client subscribed a term deposit? (binary: "yes", "no")
-
-#### Missing Attribute Values
-
-There are several missing values in some categorical attributes, all coded with the "unknown" label. These missing values can be treated as a possible class label or using deletion or imputation techniques. 
-
-
-## Analysis
-
-... 
-
-
-## Conclusion
-
-... 
+In particular, it is conceivable that certain identifiable subgroups 
+among the clients may have become more susceptible to sales pitches 
+emphasizing security and wealth protection, but this is mere speculation.

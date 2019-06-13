@@ -729,7 +729,7 @@ d %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   ggplot(aes(x = age, fill = y)) + 
   geom_histogram() + 
-  xlab("job") + 
+  xlab("age") + 
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   facet_wrap(~time, ncol = 1)
@@ -739,7 +739,7 @@ d %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   ggplot(aes(x = age, fill = y)) + 
   geom_histogram(bins = 20) + 
-  xlab("job") + 
+  xlab("age") + 
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   facet_wrap(~time, ncol = 1)

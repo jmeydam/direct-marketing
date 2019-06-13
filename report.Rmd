@@ -85,7 +85,7 @@ suggests that the data contain no useful signal.
 
 In contrast, the model trained on the later data has considerable 
 predictive power and could have been used for optimizing campaigns. 
-Indeed, later campaigns appear to have been informed by such a model, 
+In fact, later campaigns appear to have been informed by such a model, 
 systematically targeting subgroups and calibrating the number of calls.
 
 Our claim is not so much that the earlier data are in fact completely 
@@ -103,41 +103,42 @@ In particular, it is conceivable that certain identifiable subgroups
 among the clients may have become more susceptible to sales pitches 
 emphasizing security and wealth protection, but this is mere speculation.
 
-
+\newpage
 # Data Set
 
-> [bank marketing data set](http://archive.ics.uci.edu/ml/datasets/Bank+Marketing) 
-> made available via the [UCI Machine Learning Repository](http://archive.ics.uci.edu/ml) 
-> maintained by the University of California, Irvine. 
+[Bank marketing data set](http://archive.ics.uci.edu/ml/datasets/Bank+Marketing) 
+made available via the [UCI Machine Learning Repository](http://archive.ics.uci.edu/ml) 
+maintained by the University of California, Irvine. 
 
-Specific data set used:
+### Specific Data Set Used
 
-> bank-additional-full.csv with all examples (41188) and 20 inputs, ordered by date 
+> bank-additional-full.csv with all examples (41,188) and 20 inputs, ordered by date 
 > (from May 2008 to November 2010), very close to the data analyzed in [Moro et al., 2014].
 
-Download link:
+### Download Link
 
 > <http://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip>
 
-Full citation for data set: 
+### Full Citation for Data Set
 
 > [Moro et al., 2014] S. Moro, P. Cortez and P. Rita. A Data-Driven Approach to Predict the Success of Bank Telemarketing. Decision Support Systems, Elsevier, 62:22-31, June 2014
 
-As stated on the website, the data were collected during
+As stated on the website[website](http://archive.ics.uci.edu/ml/datasets/Bank+Marketing), 
+the data were collected during
 
 > [...] direct marketing campaigns (phone calls) of a Portuguese banking institution. The classification goal is to predict if the client will subscribe [to] a term deposit (variable y).
 
-Background information on term deposits:
+### Background Information on Term Deposits
 
 > <https://www.investopedia.com/terms/t/termdeposit.asp>
 
 > A term deposit is a fixed-term investment that includes the deposit of money into an account at a financial institution. Term deposit investments usually carry short-term maturities ranging from one month to a few years and will have varying levels of required minimum deposits.
 > 
-> The investor must understand when buying a term deposit that they can withdraw their funds only after the term ends. In some cases, the account holder may allow the investor early termination—or withdrawal—if they give several days notification. Also, there will be a penalty assessed for early termination.
+> The investor must understand when buying a term deposit that they can withdraw their funds only after the term ends. In some cases, the account holder may allow the investor early termination - or withdrawal - if they give several days notification. Also, there will be a penalty assessed for early termination.
 >
 > [...] Term deposits are an extremely safe investment and are therefore very appealing to conservative, low-risk investors.
 
-
+\newpage
 ## Attributes from Bank Client Data
 
 1. age (numeric)
@@ -180,7 +181,7 @@ Background information on term deposits:
 
 Added for GBM: y_bernoulli (0 = "no", 1 = "yes")
 
-
+\newpage
 # Exploratory Data Analysis
 
 ## Social and Economic Context Attributes
@@ -193,14 +194,16 @@ plotting the data in sequence will give an approximation
 to a proper time series.
 
 There is a sharp drop in the [3 month Euribor interest rate](https://www.investopedia.com/terms/e/euribor.asp) 
-aoround observation 25,000.
+aoround observation 25,000:
 
+&nbsp;  
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>%
   ggplot(aes(observation, euribor3m)) + 
-  geom_line() +
-  ggtitle("3 Month Euribor Interest Rate")
+  geom_line() # +
+  # ggtitle("3 Month Euribor Interest Rate")
 ```
+&nbsp;  
 
 Note:
 
@@ -212,27 +215,35 @@ Note:
 - Higher variability after observation 36,000 is partly due 
   to fewer observations per time unit (fewer/lower intensity campaigns)
   
-In the rest of this section we will focus on the the number of people 
-employed. Note the solid downward trend after the onset of the crisis:  
+Next we will focus on the the number of people employed. 
 
+\newpage
+### Number of People Employed
+
+Note the solid downward trend after the onset of the crisis:  
+
+&nbsp;  
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>%
   ggplot(aes(observation, nr.employed)) + 
-  geom_line() +
-  ggtitle("Number of People Employed")
+  geom_line() # +
+  # ggtitle("Number of People Employed")
 ```
 
+\newpage
 Now we will also show the responses ("yes"/"no"). We will
 show responses as jittered points to make gradual changes in 
-frequency easier to see. 
+frequency easier to see:
 
+&nbsp;  
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>% 
   ggplot(aes(x = observation, y = nr.employed, color = y)) + 
   geom_point(position = position_jitter(width = 0, height = 20),
-             alpha = 0.4) +
-  ggtitle("Number of People Employed, With Response")
+             alpha = 0.4) # +
+  # ggtitle("Number of People Employed, With Response")
 ```
+&nbsp;  
 
 Note how "yes" responses become more dominant towards the end.
 Keep in mind that observations are not evenly distributed in 
@@ -242,39 +253,47 @@ of having fewer observations per time unit.
 
 While there are "yes" responses throughout, the "no" responses 
 appear to drown out the "yes" responses for most of the plot. 
+
+\newpage
+### Responses over Time
+
 Next, to see trends for both responses more clearly, we will plot 
 density curves of "yes" and "no" responses. These curves are 
 smoothed and normalized so that each curve integrates to 1.
-
-```{r, echo=FALSE}
-d %>% mutate(observation = 1:n()) %>%
-  ggplot(aes(x = observation, color = y)) + 
-  geom_line(stat = "density") +
-  ggtitle("Changing Freqeuncy of Responses as Densities")
-```
 
 Note the slow, then halting increase in the frequency of "yes" 
 responses before the financial crisis, followed by steep bump 
 just before observation 30,000, and then a solid rise (the drop 
 at the end is an artifact of the plot). 
 
-Next, to show the changing share of "yes" and "no" responses,
-we will bin observations in groups of 2,500.
-
+&nbsp;  
 ```{r, echo=FALSE}
 d %>% mutate(observation = 1:n()) %>%
-  mutate(group = (observation %/% 2500) * 2500) %>%
-  group_by(group) %>%
-  ggplot(aes(x = group, fill = y)) + 
-  geom_bar(position = position_stack()) +
-  ggtitle("Changing Share of Responses")
+  ggplot(aes(x = observation, color = y)) + 
+  geom_line(stat = "density") # +
+  # ggtitle("Changing Frequency of Responses as Densities")
 ```
+
+\newpage
+Finally, to show the changing share of "yes" and "no" responses,
+we will bin observations in groups of 2,500.
 
 Note the much lower prevalence of "yes" responses in the first two thirds
 of the plot. Again, the lower bar at the end and consequently the apparent 
 drop both of "yes" and "no" responses is an artifact of the plot. In fact, 
 the share of "yes" responses rises to over 50% in the last bar.
 
+&nbsp;  
+```{r, echo=FALSE}
+d %>% mutate(observation = 1:n()) %>%
+  mutate(group = (observation %/% 2500) * 2500) %>%
+  group_by(group) %>%
+  ggplot(aes(x = group, fill = y)) + 
+  geom_bar(position = position_stack()) # +
+  # ggtitle("Changing Share of Responses")
+```
+
+\newpage
 ### Thoughts
 
 In the first visual displays of the data, until about observation 36,000,
@@ -298,7 +317,7 @@ half of the observations and is significantly lower towards the end.
 The employment variation rate (emp.var.rate) can also be used to detect
 observations from 27,500 onwards.
 
-There might be a causal connection between the efficiency / success
+There might be a causal connection between the efficiency/success
 of campaigns and a combination of economic indicators (in particular,
 the number of people employed and the employment variation rate), but the
 improvement of the success rate might also be due to a learning effect:
@@ -318,7 +337,7 @@ in a country in crisis. In particular, it is conceivable that certain
 identifiable subgroups among the customers may have become more susceptible
 to sales pitches emphasizing security and wealth protection.
 
-
+\newpage
 ## Other Attributes
 
 As we will see later, three attributes are particularly relevant:
@@ -338,6 +357,13 @@ represented or not represented at all become noticeable, with very high
 shares of positive responses, in particular the categories "student" 
 and "retired" and the associated age ranges.
 
+### Thoughts
+
+A general effect of the financial crisis is highly likely. Furthermore,
+the emergence of new groups with high success rates points to changes
+in the targeting of the campaigns. 
+
+&nbsp;  
 ```{r, echo=FALSE}
 d %>%
   mutate(time = ifelse(row_number() <= 27500, "before", "after")) %>%
@@ -349,8 +375,8 @@ d %>%
   xlab("job") + 
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~time, ncol = 1) +
-  ggtitle("Job")
+  facet_wrap(~time, ncol = 1) # +
+  # ggtitle("Job")
 ```
 
 ```{r, echo=FALSE}
@@ -359,13 +385,14 @@ d %>%
   mutate(time = factor(time, levels = c("before", "after"))) %>%
   ggplot(aes(x = age, fill = y)) + 
   geom_histogram(bins = 20) + 
-  xlab("job") + 
+  xlab("age") + 
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~time, ncol = 1) +
-  ggtitle("Age")
+  facet_wrap(~time, ncol = 1) # +
+  # ggtitle("Age")
 ```
 
+&nbsp;  
 ```{r, echo=FALSE}
 d %>%
   mutate(time = ifelse(row_number() <= 27500, "before", "after")) %>%
@@ -377,17 +404,12 @@ d %>%
   xlab("education") + 
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~time, ncol = 1) +
-  ggtitle("Education")
+  facet_wrap(~time, ncol = 1) # +
+  # ggtitle("Education")
 ```
 
-### Thoughts
 
-A general effect of the financial crisis is highly likely. However,
-the emergence of new groups with high success rates points to changes
-in the targeting of the campaigns. 
-
-
+\newpage
 # Model
 
 Given the obvious changes both in the economy and in the targeting of the
@@ -446,7 +468,7 @@ economic variables and the month to reduce timing effects.
 
 Tuning the models by optimizing parameters would be a natural next step.
 
-
+\newpage
 ## Before Onset of Financial Crisis
 
 ```{r, include=FALSE}
@@ -466,6 +488,7 @@ boost_before_3 <- gbm(y_bernoulli ~ .,
 summary(boost_before_3)
 ```
 
+\newpage
 ### Test
 
 ```{r}
@@ -485,7 +508,7 @@ plot(performance(prediction(predictions = yhat_boost_before,
 This model is basically useless. Inspecting the ROC curve shows that the model performs
 at the level of random guessing.
 
-
+\newpage
 ## After Onset of Financial Crisis
 
 ```{r}
@@ -502,6 +525,7 @@ boost_after_3 <- gbm(y_bernoulli ~ .,
 summary(boost_after_3)
 ```
 
+\newpage
 ### Test
 
 ```{r}
@@ -521,8 +545,8 @@ plot(performance(prediction(predictions = yhat_boost_after,
 This model clearly has predictive power. A cut-off can be chosen to calibrate
 campaigns, for example to improve the proportion of positive responses.
 
-
-## Results
+\newpage
+# Results
 
 A commonly highly effective machine learning algorithm was trained and 
 tested both on the data before the onset of the financial crisis and 
@@ -534,7 +558,7 @@ suggests that the data contain no useful signal.
 
 In contrast, the model trained on the later data has considerable 
 predictive power and could have been used for optimizing campaigns. 
-Indeed, as pointed out earlier, later campaigns appear to have been  
+In fact, as pointed out earlier, later campaigns appear to have been  
 systematically targeting subgroups. It can be assumed that later 
 campaigns were based on models similar to the one presented here.
 
@@ -543,7 +567,6 @@ useless, but that the later data are strikingly more useful. Dramatic
 changes in the economy led to the amplification of signals in the data 
 and/or to the emergence of entirely new signals. We suggest this as 
 a potentially fruitful avenue for further research.
-
 
 # Conclusion
 
