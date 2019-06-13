@@ -137,7 +137,6 @@ Background information on term deposits:
 >
 > [...] Term deposits are an extremely safe investment and are therefore very appealing to conservative, low-risk investors.
 
-> <http://archive.ics.uci.edu/ml/datasets/Bank+Marketing>
 
 ## Attributes from Bank Client Data
 
@@ -149,12 +148,14 @@ Background information on term deposits:
 6. housing: has housing loan? (categorical: "no", "yes", "unknown")
 7. loan: has personal loan? (categorical: "no", "yes", "unknown")
 
+
 ## Attributes Related to the Last Contact of the Current Campaign
 
 8. contact: contact communication type (categorical: "cellular", "telephone") 
 9. month: last contact month of year (categorical: "jan", "feb", "mar", ..., "nov", "dec")
 10. day_of_week: last contact day of the week (categorical: "mon", "tue", "wed", "thu", "fri")
 11. duration: last contact duration, in seconds (numeric). **Important note**:  this attribute highly affects the output target (e.g., if duration=0 then y="no"). Yet, the duration is not known before a call is performed. Also, after the end of the call y is obviously known. Thus, this input should only be included for benchmark purposes and should be discarded if the intention is to have a realistic predictive model.
+
 
 ## Other Attributes
 
@@ -163,6 +164,7 @@ Background information on term deposits:
 14. previous: number of contacts performed before this campaign and for this client (numeric)
 15. poutcome: outcome of the previous marketing campaign (categorical: "failure", "nonexistent", "success")
 
+
 ## Social and Economic Context Attributes
 
 16. emp.var.rate: employment variation rate - quarterly indicator (numeric)
@@ -170,6 +172,7 @@ Background information on term deposits:
 18. cons.conf.idx: consumer confidence index - monthly indicator (numeric)     
 19. euribor3m: euribor 3 month rate - daily indicator (numeric)
 20. nr.employed: number of people employed - quarterly indicator (numeric)
+
 
 ## Output Variable (Target)
 
@@ -359,7 +362,7 @@ d %>%
   xlab("job") + 
   ylab("") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~time, ncol = 1)f +
+  facet_wrap(~time, ncol = 1) +
   ggtitle("Age")
 ```
 
@@ -443,7 +446,8 @@ economic variables and the month to reduce timing effects.
 
 Tuning the models by optimizing paramters would be a natural next step.
 
-## "Before"
+
+## Before Onset of Financial Crisis
 
 ```{r, include=FALSE}
 set.seed(5)
@@ -460,38 +464,15 @@ boost_before_3 <- gbm(y_bernoulli ~ .,
                       interaction.depth = 4)
 
 summary(boost_before_3)
-#                     var      rel.inf
-# job                 job 27.152056729
-# age                 age 19.571323650
-# education     education 16.539990870
-# day_of_week day_of_week 13.536900141
-# campaign       campaign  7.795835207
-# marital         marital  4.682135452
-# contact         contact  3.290501427
-# housing         housing  2.764413041
-# loan               loan  2.445246409
-# default         default  1.525721577
-# poutcome       poutcome  0.506492675
-# previous       previous  0.181584149
-# pdays             pdays  0.007798672
 ```
 
-### test_before
+### Test
 
 ```{r}
 yhat_boost_before <- predict(boost_before_3,
                              type = "response",
                              newdata = test_before,
                              n.trees = 5000)
-
-summary(test_before$y_bernoulli == 1)
-summary(yhat_boost_before)
-# using cut-off for probability to predict a reasonable number of true "yes"
-summary(yhat_boost_before > 0.05)
-actual_before <- ifelse(test_before$y_bernoulli == 1, "yes", "no")
-predicted_before <- ifelse(yhat_boost_before > 0.05, "yes", "no")
-mean(actual_before == predicted_before)
-table(actual_before, predicted_before)
 
 plot(performance(prediction(predictions = yhat_boost_before, 
                             labels = ifelse(test_before$y_bernoulli == 1, "yes", "no")), 
@@ -504,8 +485,8 @@ plot(performance(prediction(predictions = yhat_boost_before,
 This model is basically useless. Inspecting the ROC curve shows that the model performs
 at the level of random guessing.
 
-## "After"
 
+## After Onset of Financial Crisis
 
 ```{r}
 
@@ -519,38 +500,15 @@ boost_after_3 <- gbm(y_bernoulli ~ .,
                       interaction.depth = 4)
 
 summary(boost_after_3)
-#                     var    rel.inf
-# job                 job 24.7270879
-# age                 age 21.2481151
-# education     education 13.6982947
-# day_of_week day_of_week 11.4210767
-# pdays             pdays  8.8720524
-# campaign       campaign  4.7749730
-# poutcome       poutcome  3.5969610
-# marital         marital  3.3450231
-# housing         housing  2.4191063
-# previous       previous  2.3089277
-# loan               loan  1.8543587
-# contact         contact  0.9871851
-# default         default  0.7468385
 ```
 
-### test_after
+### Test
 
 ```{r}
 yhat_boost_after <- predict(boost_after_3,
                              type = "response",
                              newdata = test_after,
                              n.trees = 5000)
-
-summary(test_after$y_bernoulli == 1)
-summary(yhat_boost_after)
-# using cut-off for probability to predict a reasonable number of true "yes"
-summary(yhat_boost_after > 0.20)
-actual_after <- ifelse(test_after$y_bernoulli == 1, "yes", "no")
-predicted_after <- ifelse(yhat_boost_after > 0.20, "yes", "no")
-mean(actual_after == predicted_after)
-table(actual_after, predicted_after)
 
 plot(performance(prediction(predictions = yhat_boost_after, 
                             labels = ifelse(test_after$y_bernoulli == 1, "yes", "no")), 
@@ -561,8 +519,7 @@ plot(performance(prediction(predictions = yhat_boost_after,
 ```
 
 This model clearly has predictive power. A cut-off can be chosen to calibrate
-campaigns, for example to improve the proportion of positive responses
-or to reach a target number of positive responses.
+campaigns, for example to improve the proportion of positive responses.
 
 
 ## Results
